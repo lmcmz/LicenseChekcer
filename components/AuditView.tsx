@@ -11,8 +11,11 @@ import {
   Globe,
   Link2,
   ChevronDown,
-  Github
+  Github,
+  CloudDownload,
+  X
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { DependencyAudit, RiskLevel } from '../types';
 import { auditDependenciesWithGemini } from '../services/geminiService';
 import { parseDependencies } from '../services/dependencyParser';
@@ -41,7 +44,10 @@ const RISK_PRIORITY = {
 };
 
 const AuditView: React.FC = () => {
+  const { t } = useTranslation();
   const [content, setContent] = useState<string>('');
+  const [urlInput, setUrlInput] = useState<string>('');
+  const [isFetchingUrl, setIsFetchingUrl] = useState(false);
   const [isAuditing, setIsAuditing] = useState(false);
   const [tasks, setTasks] = useState<DependencyTask[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
@@ -50,7 +56,6 @@ const AuditView: React.FC = () => {
 
   const allDone = tasks.length > 0 && tasks.every(t => t.status === 'success' || t.status === 'error');
 
-  // Prioritize High Risk items in the cards view as well
   const sortedTasks = useMemo(() => {
     return [...tasks].sort((a, b) => {
       const scoreA = a.result ? RISK_PRIORITY[a.result.riskLevel] : -1;
@@ -60,7 +65,6 @@ const AuditView: React.FC = () => {
     });
   }, [tasks]);
 
-  // Smoothly transition to results view on completion
   useEffect(() => {
     if (allDone && tasks.length > 0 && !isAuditing) {
       const timer = setTimeout(() => {
@@ -71,8 +75,30 @@ const AuditView: React.FC = () => {
     }
   }, [allDone, tasks.length, isAuditing]);
 
+  const handleFetchUrl = async () => {
+    if (!urlInput.trim()) return;
+    setIsFetchingUrl(true);
+    setError(null);
+    try {
+      // Normalize GitHub URLs to raw if possible
+      let targetUrl = urlInput.trim();
+      if (targetUrl.includes('github.com') && !targetUrl.includes('raw.githubusercontent.com') && !targetUrl.includes('/raw/')) {
+        targetUrl = targetUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+      }
+
+      const response = await fetch(targetUrl);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const text = await response.text();
+      setContent(text);
+    } catch (err: any) {
+      setError(`Failed to fetch URL: ${err.message}`);
+    } finally {
+      setIsFetchingUrl(false);
+    }
+  };
+
   const normalizeResult = (res: DependencyAudit): DependencyAudit => {
-    const lic = res.license.toUpperCase();
+    const lic = res.license?.toUpperCase() || 'UNKNOWN';
     const safeKeywords = ['MIT', 'ISC', 'BSD', 'APACHE', 'UNLICENSE', 'ZLIB', 'WTFPL', 'PUBLIC DOMAIN'];
     const isSafe = safeKeywords.some(k => lic.includes(k));
     
@@ -88,7 +114,7 @@ const AuditView: React.FC = () => {
       }
     }
 
-    const repository = res.repository || `https://www.npmjs.com/package/${res.name}`;
+    const repository = res.repository || (res.name.includes('/') ? `https://github.com/${res.name}` : `https://www.google.com/search?q=${res.name}+repo`);
 
     return { 
       ...res, 
@@ -107,7 +133,7 @@ const AuditView: React.FC = () => {
     
     const rawDeps = parseDependencies(content);
     if (rawDeps.length === 0) {
-      setError("No dependencies identified. Please paste a valid package.json or dependency list.");
+      setError(t('audit.noDeps'));
       setIsAuditing(false);
       return;
     }
@@ -178,7 +204,7 @@ const AuditView: React.FC = () => {
         next.forEach((t) => {
           if (t.status === 'loading') {
             t.status = 'error';
-            t.error = 'No response from AI auditor';
+            t.error = 'No response';
           }
         });
         
@@ -203,6 +229,7 @@ const AuditView: React.FC = () => {
   const clearResults = () => {
     setTasks([]);
     setContent('');
+    setUrlInput('');
     setError(null);
     setShowResults(false);
   };
@@ -215,49 +242,92 @@ const AuditView: React.FC = () => {
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="text-center mb-10">
             <h1 className="text-4xl sm:text-5xl font-extrabold text-black dark:text-white tracking-tighter mb-4">
-              License Checker.
+              {t('audit.title')}
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">
-              Scans package lists, verifies licenses, and flags compliance risks automatically.
+              {t('audit.desc')}
             </p>
           </div>
 
-          <div className="bg-white dark:bg-[#0A0A0A] rounded-2xl border border-slate-200 dark:border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.12)] dark:shadow-none overflow-hidden group focus-within:border-black dark:focus-within:border-white/30 transition-all">
-            <div className="p-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                <Search className="w-3.5 h-3.5" /> Dependency Input
+          <div className="space-y-4 mb-8">
+            {/* URL Input Bar */}
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <CloudDownload className="h-4 w-4 text-slate-400" />
               </div>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => setContent('{\n  "dependencies": {\n    "react": "^19.0.0",\n    "next": "latest",\n    "mongoose": "latest",\n    "lodash": "4.17.21",\n    "redis": "latest"\n  }\n}')}
-                  className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400"
+              <input
+                type="text"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleFetchUrl()}
+                placeholder={t('audit.urlPlaceholder')}
+                className="block w-full pl-10 pr-24 py-3 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/10 rounded-2xl text-sm outline-none focus:border-black dark:focus:border-white/30 transition-all placeholder:text-slate-400 font-medium"
+              />
+              <div className="absolute inset-y-0 right-1.5 flex items-center gap-1">
+                {urlInput && (
+                   <button onClick={() => setUrlInput('')} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                     <X className="w-3.5 h-3.5" />
+                   </button>
+                )}
+                <button
+                  onClick={handleFetchUrl}
+                  disabled={isFetchingUrl || !urlInput}
+                  className="px-4 py-1.5 bg-black dark:bg-white text-white dark:text-black rounded-xl text-xs font-bold disabled:opacity-50 transition-all active:scale-95"
                 >
-                  Load Example
+                  {isFetchingUrl ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : t('audit.fetchBtn')}
                 </button>
               </div>
             </div>
-            <textarea
-              className="w-full h-72 p-6 text-sm font-mono bg-transparent dark:text-slate-200 outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
-              placeholder='Paste package.json or requirements.txt content here...'
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
-            <div className="p-4 flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5">
-              <div className="text-[10px] font-medium text-slate-400 uppercase tracking-tight">
-                AI Audit Mode: Active scanning enabled
+
+            <div className="bg-white dark:bg-[#0A0A0A] rounded-2xl border border-slate-200 dark:border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.12)] dark:shadow-none overflow-hidden group focus-within:border-black dark:focus-within:border-white/30 transition-all">
+              <div className="p-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                  <Search className="w-3.5 h-3.5" /> {t('audit.inputLabel')}
+                </div>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => setContent('module github.com/user/project\n\ngo 1.18\n\nrequire (\n  github.com/gin-gonic/gin v1.8.1\n  github.com/sirupsen/logrus v1.9.0\n)')}
+                    className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400"
+                  >
+                    Go Mod
+                  </button>
+                  <button 
+                    onClick={() => setContent('[dependencies]\nserde = "1.0"\ntokio = { version = "1.0", features = ["full"] }')}
+                    className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400"
+                  >
+                    Cargo
+                  </button>
+                  <button 
+                    onClick={() => setContent('{\n  "dependencies": {\n    "react": "^19.0.0",\n    "next": "latest"\n  }\n}')}
+                    className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400"
+                  >
+                    NPM
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={runAudit}
-                disabled={isAuditing || !content.trim()}
-                className={`px-6 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-all ${
-                  isAuditing || !content.trim() 
-                  ? 'bg-slate-200 dark:bg-white/5 text-slate-400' 
-                  : 'bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-95'
-                }`}
-              >
-                {isAuditing ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Run Audit'}
-                {!isAuditing && <ArrowRight className="w-4 h-4" />}
-              </button>
+              <textarea
+                className="w-full h-72 p-6 text-sm font-mono bg-transparent dark:text-slate-200 outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                placeholder={t('audit.placeholder')}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+              />
+              <div className="p-4 flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5">
+                <div className="text-[10px] font-medium text-slate-400 uppercase tracking-tight">
+                  Support: NPM, Maven, Go, Rust, Gradle, Swift
+                </div>
+                <button
+                  onClick={runAudit}
+                  disabled={isAuditing || !content.trim()}
+                  className={`px-6 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-all ${
+                    isAuditing || !content.trim() 
+                    ? 'bg-slate-200 dark:bg-white/5 text-slate-400' 
+                    : 'bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-95'
+                  }`}
+                >
+                  {isAuditing ? <Loader2 className="w-4 h-4 animate-spin" /> : t('audit.run')}
+                  {!isAuditing && <ArrowRight className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
           </div>
           {error && (
@@ -272,27 +342,27 @@ const AuditView: React.FC = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-white/10">
             <div>
               <h2 className="text-2xl font-black text-black dark:text-white tracking-tight">
-                {allDone ? 'Audit Completed' : 'Scanning Dependencies...'}
+                {allDone ? t('audit.completed') : t('audit.scanning')}
               </h2>
               <div className="flex items-center gap-4 mt-1">
                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                   <div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> High Risk First
+                   <div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> {t('audit.riskHigh')}
                  </div>
                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Safe
+                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> {t('audit.riskSafe')}
                  </div>
               </div>
             </div>
             <div className="flex gap-2">
               <button onClick={clearResults} className="px-4 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold transition-all flex items-center gap-2">
-                <RefreshCw className="w-3.5 h-3.5" /> Start Over
+                <RefreshCw className="w-3.5 h-3.5" /> {t('audit.startOver')}
               </button>
               {allDone && (
                 <button 
                   onClick={() => setShowResults(!showResults)}
                   className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-xl hover:scale-105"
                 >
-                  {showResults ? 'Show Task Queue' : 'View Detailed Report'}
+                  {showResults ? t('audit.showQueue') : t('audit.showReport')}
                 </button>
               )}
             </div>
@@ -330,7 +400,7 @@ const AuditView: React.FC = () => {
                        <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
                          task.result?.riskLevel === RiskLevel.HIGH ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600' : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400'
                        }`}>
-                        {task.result?.license || (task.status === 'loading' ? 'Auditing...' : 'Unknown')}
+                        {task.result?.license || (task.status === 'loading' ? '...' : '?')}
                       </span>
                       {task.result?.repository && (
                         <a 
@@ -358,7 +428,7 @@ const AuditView: React.FC = () => {
               <SummaryCards audits={tasks.filter(t => t.result).map(t => t.result!)} />
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                   Audit Results Breakdown <ChevronDown className="w-3 h-3" />
+                   {t('audit.resultsTitle')} <ChevronDown className="w-3 h-3" />
                  </h3>
                  <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-lg">
                     <button onClick={() => setViewMode('table')} className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase transition-all flex items-center gap-2 ${viewMode === 'table' ? 'bg-white dark:bg-white/10 text-black dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>

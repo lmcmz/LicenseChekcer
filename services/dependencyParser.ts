@@ -14,65 +14,89 @@ const NON_DEP_KEYS = new Set([
 
 export const parseDependencies = (input: string): RawDependency[] => {
   const results: RawDependency[] = [];
-  
-  // Try parsing as JSON first
+  const trimmedInput = input.trim();
+
+  // 1. Try JSON (NPM, Swift.resolved)
   try {
-    const json = JSON.parse(input);
+    const json = JSON.parse(trimmedInput);
     
-    // Look for standard dependency keys first
-    const depKeys = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
-    let foundStandard = false;
-    
-    depKeys.forEach(key => {
+    // NPM Style
+    const npmKeys = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
+    let found = false;
+    npmKeys.forEach(key => {
       if (json[key] && typeof json[key] === 'object') {
-        foundStandard = true;
+        found = true;
         for (const [name, version] of Object.entries(json[key])) {
-          if (typeof version === 'string') {
-            results.push({ name, version });
-          }
+          if (typeof version === 'string') results.push({ name, version });
         }
       }
     });
 
-    // If no standard keys found, parse the root object but filter out known metadata keys
-    if (!foundStandard && typeof json === 'object' && json !== null) {
-      for (const [name, version] of Object.entries(json)) {
-        if (!NON_DEP_KEYS.has(name) && typeof version === 'string') {
-          results.push({ name, version });
-        }
-      }
+    // Swift PM .resolved Style
+    if (json.pins && Array.isArray(json.pins)) {
+      found = true;
+      json.pins.forEach((pin: any) => {
+        results.push({ 
+          name: pin.identity || pin.package || getBaseName(pin.location), 
+          version: pin.state?.version || 'latest' 
+        });
+      });
     }
-    
-    if (results.length > 0) return results;
-  } catch (e) {
-    // Not valid JSON, proceed to regex
+
+    if (found) return results;
+  } catch (e) {}
+
+  // 2. Go (go.mod)
+  const goRegex = /require\s+([^\s]+)\s+([^\s\n\r]+)/g;
+  let match;
+  while ((match = goRegex.exec(trimmedInput)) !== null) {
+    results.push({ name: match[1], version: match[2] });
   }
 
-  // Fallback: Line-by-line parsing for requirements.txt or raw lists
-  const lines = input.split('\n');
-  const kvRegex = /["']?([^"':\s=]+)["']?\s*[:=]\s*["']?([^"'\s]+)["']?/;
-  
-  lines.forEach(line => {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('#')) return;
-    
-    const match = trimmed.match(kvRegex);
-    if (match) {
-      const name = match[1];
-      if (!NON_DEP_KEYS.has(name)) {
-        results.push({ name, version: match[2] });
-      }
-    } else {
-      // Simple space/tab separated
-      const parts = trimmed.split(/\s+/);
-      if (parts.length >= 1) {
-        const name = parts[0].replace(/['",]/g, '');
-        if (name && !NON_DEP_KEYS.has(name)) {
-          results.push({ name, version: parts[1]?.replace(/['",]/g, '') || 'latest' });
-        }
-      }
+  // 3. Rust (Cargo.toml)
+  const rustRegex = /^([a-zA-Z0-9\-_]+)\s*=\s*["']?([^"'\n]+)["']?/gm;
+  while ((match = rustRegex.exec(trimmedInput)) !== null) {
+    if (!['package', 'lib', 'bin'].includes(match[1])) {
+      results.push({ name: match[1], version: match[2] });
     }
-  });
+  }
+
+  // 4. Maven (pom.xml) - Simple heuristic
+  const mavenRegex = /<dependency>[\s\S]*?<artifactId>(.*?)<\/artifactId>[\s\S]*?<version>(.*?)<\/version>/g;
+  while ((match = mavenRegex.exec(trimmedInput)) !== null) {
+    results.push({ name: match[1], version: match[2] });
+  }
+
+  // 5. Gradle (build.gradle)
+  const gradleRegex = /(?:implementation|api|testImplementation|classpath)\s+['"]([^:]+):([^:]+):([^'"]+)['"]/g;
+  while ((match = gradleRegex.exec(trimmedInput)) !== null) {
+    results.push({ name: `${match[1]}:${match[2]}`, version: match[3] });
+  }
+
+  // 6. Swift (Package.swift)
+  const swiftRegex = /\.package\(url:\s*["']([^"']+)["'],\s*(?:from|branch|revision):\s*["']([^"']+)["']\)/g;
+  while ((match = swiftRegex.exec(trimmedInput)) !== null) {
+    results.push({ name: getBaseName(match[1]), version: match[2] });
+  }
+
+  // 7. Fallback: Line-by-line (requirements.txt, etc.)
+  if (results.length === 0) {
+    const lines = trimmedInput.split('\n');
+    const kvRegex = /["']?([^"':\s=<>!]+)["']?\s*[:=<>!]+\s*["']?([^"'\s,;]+)["']?/;
+    lines.forEach(line => {
+      const l = line.trim();
+      if (!l || l.startsWith('//') || l.startsWith('#') || l.startsWith('/*')) return;
+      const m = l.match(kvRegex);
+      if (m && !NON_DEP_KEYS.has(m[1])) {
+        results.push({ name: m[1], version: m[2] });
+      }
+    });
+  }
 
   return results;
+};
+
+const getBaseName = (url: string) => {
+  const parts = url.replace(/\/$/, '').split('/');
+  return parts[parts.length - 1].replace(/\.git$/, '');
 };

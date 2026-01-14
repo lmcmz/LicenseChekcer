@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DependencyAudit, RiskLevel } from '../types';
 import { Globe, ArrowUp, ArrowDown, Github } from 'lucide-react';
 
@@ -18,6 +19,7 @@ const RISK_SCORE = {
 };
 
 const AuditTable: React.FC<AuditTableProps> = ({ audits }) => {
+  const { t } = useTranslation();
   const [sortKey, setSortKey] = useState<SortKey>('risk');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
@@ -52,6 +54,15 @@ const AuditTable: React.FC<AuditTableProps> = ({ audits }) => {
     }
   };
 
+  const getRiskLabel = (level: RiskLevel) => {
+    switch (level) {
+      case RiskLevel.SAFE: return t('risks.safe');
+      case RiskLevel.CAUTION: return t('risks.caution');
+      case RiskLevel.HIGH: return t('risks.high');
+      default: return t('risks.unknown');
+    }
+  };
+
   if (audits.length === 0) return null;
 
   return (
@@ -64,7 +75,7 @@ const AuditTable: React.FC<AuditTableProps> = ({ audits }) => {
               onClick={() => toggleSort('name')}
             >
               <div className="flex items-center gap-1">
-                Dependency {sortKey === 'name' && (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                {t('table.dependency')} {sortKey === 'name' && (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
               </div>
             </th>
             <th 
@@ -72,7 +83,7 @@ const AuditTable: React.FC<AuditTableProps> = ({ audits }) => {
               onClick={() => toggleSort('license')}
             >
               <div className="flex items-center gap-1">
-                License {sortKey === 'license' && (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                {t('table.license')} {sortKey === 'license' && (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
               </div>
             </th>
             <th 
@@ -80,10 +91,10 @@ const AuditTable: React.FC<AuditTableProps> = ({ audits }) => {
               onClick={() => toggleSort('risk')}
             >
               <div className="flex items-center gap-1">
-                Risk {sortKey === 'risk' && (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
+                {t('table.risk')} {sortKey === 'risk' && (sortOrder === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />)}
               </div>
             </th>
-            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Assessment & Repository</th>
+            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('table.assessment')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -107,7 +118,7 @@ const AuditTable: React.FC<AuditTableProps> = ({ audits }) => {
                    <span className={`text-[10px] font-black uppercase tracking-tight ${
                      item.riskLevel === RiskLevel.SAFE ? 'text-emerald-600 dark:text-emerald-400' :
                      item.riskLevel === RiskLevel.CAUTION ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'
-                   }`}>{item.riskLevel}</span>
+                   }`}>{getRiskLabel(item.riskLevel)}</span>
                 </div>
               </td>
               <td className="px-6 py-5">
