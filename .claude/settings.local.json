@@ -18,7 +18,12 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push)",
-      "mcp__chrome-devtools__get_network_request"
+      "mcp__chrome-devtools__get_network_request",
+      "Bash(git push:*)",
+      "Bash(vercel logs:*)",
+      "Bash(vercel ls)",
+      "Bash(vercel ls:*)",
+      "Bash(curl:*)"
     ]
   }
 }
