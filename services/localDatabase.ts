@@ -126,6 +126,7 @@ export const COMMON_LICENSES: Record<string, { risk: RiskLevel, friendly: boolea
 
 export const KNOWN_PACKAGES: Record<string, Partial<DependencyAudit>> = {
   'react': { license: 'MIT', repository: 'https://github.com/facebook/react' },
+  'react-dom': { license: 'MIT', repository: 'https://github.com/facebook/react' },
   'vue': { license: 'MIT', repository: 'https://github.com/vuejs/core' },
   'lodash': { license: 'MIT', repository: 'https://github.com/lodash/lodash' },
   'axios': { license: 'MIT', repository: 'https://github.com/axios/axios' },
@@ -138,5 +139,7 @@ export const KNOWN_PACKAGES: Record<string, Partial<DependencyAudit>> = {
   'requests': { license: 'Apache-2.0', repository: 'https://github.com/psf/requests' },
   'flask': { license: 'BSD-3-Clause', repository: 'https://github.com/pallets/flask' },
   'django': { license: 'BSD-3-Clause', repository: 'https://github.com/django/django' },
-  'firefox': { license: 'MPL-2.0', repository: 'https://github.com/mozilla/gecko-dev' }
+  'firefox': { license: 'MPL-2.0', repository: 'https://github.com/mozilla/gecko-dev' },
+  'sharp': { license: 'Apache-2.0', repository: 'https://github.com/lovell/sharp' },
+  'nitro': { license: 'MIT', repository: 'https://github.com/unjs/nitro' }
 };
