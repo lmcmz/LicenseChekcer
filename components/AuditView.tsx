@@ -13,7 +13,15 @@ import {
   ChevronDown,
   Github,
   CloudDownload,
-  X
+  X,
+  ChevronRight,
+  Info,
+  Layers,
+  Code2,
+  Database,
+  Cpu,
+  Boxes,
+  Package
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DependencyAudit, RiskLevel } from '../types';
@@ -43,6 +51,24 @@ const RISK_PRIORITY = {
   [RiskLevel.UNKNOWN]: 0
 };
 
+// Internal Settings2 placeholder since it wasn't imported
+const Settings2 = ({ className }: { className?: string }) => (
+  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+);
+
+const EcosystemIcon: React.FC<{ type: string; size?: string }> = ({ type, size = "w-5 h-5" }) => {
+  switch (type) {
+    case 'npm': return <div className="p-1.5 rounded-lg bg-[#CB3837]/10 text-[#CB3837]"><Boxes className={size} /></div>;
+    case 'python': return <div className="p-1.5 rounded-lg bg-[#3776AB]/10 text-[#3776AB]"><Code2 className={size} /></div>;
+    case 'go': return <div className="p-1.5 rounded-lg bg-[#00ADD8]/10 text-[#00ADD8]"><Database className={size} /></div>;
+    case 'rust': return <div className="p-1.5 rounded-lg bg-[#000000]/10 dark:bg-white/10 text-black dark:text-white"><Cpu className={size} /></div>;
+    case 'maven': return <div className="p-1.5 rounded-lg bg-[#C71A36]/10 text-[#C71A36]"><Package className={size} /></div>;
+    case 'gradle': return <div className="p-1.5 rounded-lg bg-[#02303A]/10 text-[#02303A] dark:text-[#00DE7A]"><Settings2 className={size} /></div>;
+    case 'swift': return <div className="p-1.5 rounded-lg bg-[#F05138]/10 text-[#F05138]"><Layers className={size} /></div>;
+    default: return <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-400"><Search className={size} /></div>;
+  }
+};
+
 const AuditView: React.FC = () => {
   const { t } = useTranslation();
   const [content, setContent] = useState<string>('');
@@ -53,6 +79,7 @@ const AuditView: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [error, setError] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [showFormats, setShowFormats] = useState(false);
 
   const allDone = tasks.length > 0 && tasks.every(t => t.status === 'success' || t.status === 'error');
 
@@ -80,12 +107,10 @@ const AuditView: React.FC = () => {
     setIsFetchingUrl(true);
     setError(null);
     try {
-      // Normalize GitHub URLs to raw if possible
       let targetUrl = urlInput.trim();
       if (targetUrl.includes('github.com') && !targetUrl.includes('raw.githubusercontent.com') && !targetUrl.includes('/raw/')) {
         targetUrl = targetUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
       }
-
       const response = await fetch(targetUrl);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const text = await response.text();
@@ -101,11 +126,9 @@ const AuditView: React.FC = () => {
     const lic = res.license?.toUpperCase() || 'UNKNOWN';
     const safeKeywords = ['MIT', 'ISC', 'BSD', 'APACHE', 'UNLICENSE', 'ZLIB', 'WTFPL', 'PUBLIC DOMAIN'];
     const isSafe = safeKeywords.some(k => lic.includes(k));
-    
     let finalRisk = res.riskLevel;
     let finalFriendly = res.isFriendly;
     let finalReason = res.reason;
-
     if (isSafe) {
       finalRisk = RiskLevel.SAFE;
       finalFriendly = true;
@@ -113,16 +136,8 @@ const AuditView: React.FC = () => {
         finalReason = `[Auto-Correction] ${res.license} is a permissive and safe license. Original check suggested: ${res.reason}`;
       }
     }
-
     const repository = res.repository || (res.name.includes('/') ? `https://github.com/${res.name}` : `https://www.google.com/search?q=${res.name}+repo`);
-
-    return { 
-      ...res, 
-      repository,
-      riskLevel: finalRisk, 
-      isFriendly: finalFriendly,
-      reason: finalReason
-    };
+    return { ...res, repository, riskLevel: finalRisk, isFriendly: finalFriendly, reason: finalReason };
   };
 
   const runAudit = async () => {
@@ -130,66 +145,44 @@ const AuditView: React.FC = () => {
     setIsAuditing(true);
     setError(null);
     setShowResults(false);
-    
     const rawDeps = parseDependencies(content);
     if (rawDeps.length === 0) {
       setError(t('audit.noDeps'));
       setIsAuditing(false);
       return;
     }
-
-    const initialTasks: DependencyTask[] = rawDeps.map(d => ({
-      name: d.name,
-      version: d.version,
-      status: 'pending'
-    }));
-    
+    const initialTasks: DependencyTask[] = rawDeps.map(d => ({ name: d.name, version: d.version, status: 'pending' }));
     const unknownQueue: { name: string, version: string, index: number }[] = [];
     const updatedTasks = [...initialTasks];
-
     rawDeps.forEach((dep, idx) => {
       const nameKey = dep.name.toLowerCase();
       const known = KNOWN_PACKAGES[nameKey];
       if (known && known.license && COMMON_LICENSES[known.license]) {
         const licInfo = COMMON_LICENSES[known.license];
         const result: DependencyAudit = {
-          name: dep.name,
-          version: dep.version,
-          license: known.license,
+          name: dep.name, version: dep.version, license: known.license,
           repository: known.repository || `https://www.npmjs.com/package/${dep.name}`,
-          riskLevel: licInfo.risk,
-          isFriendly: licInfo.friendly,
-          reason: `[Internal DB] ${licInfo.reason}`,
-          sources: ['System Database']
+          riskLevel: licInfo.risk, isFriendly: licInfo.friendly,
+          reason: `[Internal DB] ${licInfo.reason}`, sources: ['System Database']
         };
         updatedTasks[idx] = { ...updatedTasks[idx], status: 'success', result: normalizeResult(result) };
         return;
       }
-
       const cached = getFromCache(dep.name, dep.version);
       if (cached) {
-        updatedTasks[idx] = { 
-          ...updatedTasks[idx], 
-          status: 'success', 
-          result: normalizeResult(cached) 
-        };
+        updatedTasks[idx] = { ...updatedTasks[idx], status: 'success', result: normalizeResult(cached) };
         return;
       }
-
       unknownQueue.push({ ...dep, index: idx });
       updatedTasks[idx].status = 'loading';
     });
-
     setTasks(updatedTasks);
-
     if (unknownQueue.length === 0) {
       setIsAuditing(false);
       return;
     }
-
     try {
       const results = await auditDependenciesWithGemini(unknownQueue.map(q => ({ name: q.name, version: q.version })));
-      
       setTasks(prev => {
         const next = [...prev];
         results.forEach((res) => {
@@ -200,25 +193,13 @@ const AuditView: React.FC = () => {
             next[matchedItem.index] = { ...next[matchedItem.index], status: 'success', result: finalRes };
           }
         });
-        
-        next.forEach((t) => {
-          if (t.status === 'loading') {
-            t.status = 'error';
-            t.error = 'No response';
-          }
-        });
-        
+        next.forEach((t) => { if (t.status === 'loading') { t.status = 'error'; t.error = 'No response'; } });
         return next;
       });
     } catch (err) {
       setTasks(prev => {
         const next = [...prev];
-        unknownQueue.forEach(q => {
-          if (next[q.index].status === 'loading') {
-            next[q.index].status = 'error';
-            next[q.index].error = 'Batch scan failed';
-          }
-        });
+        unknownQueue.forEach(q => { if (next[q.index].status === 'loading') { next[q.index].status = 'error'; next[q.index].error = 'Batch scan failed'; } });
         return next;
       });
     } finally {
@@ -227,14 +208,12 @@ const AuditView: React.FC = () => {
   };
 
   const clearResults = () => {
-    setTasks([]);
-    setContent('');
-    setUrlInput('');
-    setError(null);
-    setShowResults(false);
+    setTasks([]); setContent(''); setUrlInput(''); setError(null); setShowResults(false);
   };
 
   const isGitHub = (url?: string) => url?.toLowerCase().includes('github.com');
+
+  const ecosystems = ['npm', 'python', 'go', 'rust', 'maven', 'gradle', 'swift'];
 
   return (
     <div className="max-w-5xl mx-auto px-6 pt-16 pb-24">
@@ -285,24 +264,9 @@ const AuditView: React.FC = () => {
                   <Search className="w-3.5 h-3.5" /> {t('audit.inputLabel')}
                 </div>
                 <div className="flex gap-4">
-                  <button 
-                    onClick={() => setContent('module github.com/user/project\n\ngo 1.18\n\nrequire (\n  github.com/gin-gonic/gin v1.8.1\n  github.com/sirupsen/logrus v1.9.0\n)')}
-                    className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400"
-                  >
-                    Go Mod
-                  </button>
-                  <button 
-                    onClick={() => setContent('[dependencies]\nserde = "1.0"\ntokio = { version = "1.0", features = ["full"] }')}
-                    className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400"
-                  >
-                    Cargo
-                  </button>
-                  <button 
-                    onClick={() => setContent('{\n  "dependencies": {\n    "react": "^19.0.0",\n    "next": "latest"\n  }\n}')}
-                    className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400"
-                  >
-                    NPM
-                  </button>
+                  <button onClick={() => setContent('module github.com/user/project\n\ngo 1.18\n\nrequire (\n  github.com/gin-gonic/gin v1.8.1\n  github.com/sirupsen/logrus v1.9.0\n)')} className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400">Go Mod</button>
+                  <button onClick={() => setContent('[dependencies]\nserde = "1.0"\ntokio = { version = "1.0", features = ["full"] }')} className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400">Cargo</button>
+                  <button onClick={() => setContent('{\n  "dependencies": {\n    "react": "^19.0.0",\n    "next": "latest"\n  }\n}')} className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400">NPM</button>
                 </div>
               </div>
               <textarea
@@ -321,13 +285,57 @@ const AuditView: React.FC = () => {
                   className={`px-6 py-2 rounded-lg flex items-center justify-center gap-2 text-sm font-bold transition-all ${
                     isAuditing || !content.trim() 
                     ? 'bg-slate-200 dark:bg-white/5 text-slate-400' 
-                    : 'bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-95'
+                    : 'bg-black dark:bg-white text-white dark:text-black hover:opacity-90 active:scale-95 shadow-lg'
                   }`}
                 >
                   {isAuditing ? <Loader2 className="w-4 h-4 animate-spin" /> : t('audit.run')}
                   {!isAuditing && <ArrowRight className="w-4 h-4" />}
                 </button>
               </div>
+            </div>
+
+            {/* Expandable Formats List - Now BELOW the input area */}
+            <div className="bg-white dark:bg-[#0A0A0A] rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden transition-all shadow-sm">
+              <button 
+                onClick={() => setShowFormats(!showFormats)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-slate-50/50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.05] transition-colors"
+              >
+                <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <Info className="w-3.5 h-3.5" /> {t('audit.supportedTitle')}
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-1.5">
+                    {ecosystems.slice(0, 4).map(eco => (
+                      <div key={eco} className="w-5 h-5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 flex items-center justify-center">
+                        <EcosystemIcon type={eco} size="w-2.5 h-2.5" />
+                      </div>
+                    ))}
+                    <div className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-white/10 flex items-center justify-center text-[8px] font-bold">
+                      +{ecosystems.length - 4}
+                    </div>
+                  </div>
+                  <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform ${showFormats ? 'rotate-90' : ''}`} />
+                </div>
+              </button>
+              
+              {showFormats && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 p-6 border-t border-slate-100 dark:border-white/5 animate-in slide-in-from-top-2 duration-300">
+                  {ecosystems.map(eco => (
+                    <div key={eco} className="p-4 bg-slate-50/50 dark:bg-white/[0.02] rounded-xl border border-slate-100 dark:border-white/5 group hover:border-black/10 dark:hover:border-white/10 transition-colors">
+                      <div className="flex items-center gap-3 mb-3">
+                        <EcosystemIcon type={eco} />
+                        <span className="text-[11px] font-black text-black dark:text-white uppercase tracking-tight">{t(`audit.formats.${eco}.name`)}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Target File</span>
+                        <code className="text-[10px] font-mono text-blue-500 dark:text-blue-400 bg-blue-500/5 px-2 py-1 rounded inline-block w-fit">
+                          {t(`audit.formats.${eco}.file`)}
+                        </code>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           {error && (

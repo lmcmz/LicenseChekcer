@@ -8,10 +8,12 @@ import {
   Shield,
   FileText
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { LICENSE_DETAILS } from '../services/localDatabase';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const LicenseGuide: React.FC = () => {
+  const { t, i18n: i18nInstance } = useTranslation();
   const [activeTab, setActiveTab] = useState<'details' | 'comparison' | 'stats'>('details');
 
   const chartData = LICENSE_DETAILS.map(l => ({
@@ -23,18 +25,18 @@ const LicenseGuide: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto px-6 py-16 animate-in fade-in duration-500">
       <div className="mb-12">
-        <h1 className="text-4xl font-black text-black dark:text-white mb-3 tracking-tighter">License Handbook</h1>
+        <h1 className="text-4xl font-black text-black dark:text-white mb-3 tracking-tighter">{t('guide.title')}</h1>
         <p className="text-slate-500 dark:text-slate-400 text-lg font-medium max-w-xl">
-          The definitive guide to understanding open source compliance for your business.
+          {t('guide.desc')}
         </p>
       </div>
 
       {/* Tabs - Resend Style */}
       <div className="flex border-b border-slate-200 dark:border-white/10 mb-10 overflow-x-auto no-scrollbar">
         {[
-          { id: 'details', label: 'License Details', icon: <FileText className="w-3.5 h-3.5" /> },
-          { id: 'comparison', label: 'Comparison', icon: <Scale className="w-3.5 h-3.5" /> },
-          { id: 'stats', label: 'Insights', icon: <BarChart3 className="w-3.5 h-3.5" /> }
+          { id: 'details', label: t('guide.tabs.details'), icon: <FileText className="w-3.5 h-3.5" /> },
+          { id: 'comparison', label: t('guide.tabs.comparison'), icon: <Scale className="w-3.5 h-3.5" /> },
+          { id: 'stats', label: t('guide.tabs.stats'), icon: <BarChart3 className="w-3.5 h-3.5" /> }
         ].map(tab => (
           <button
             key={tab.id}
@@ -59,22 +61,23 @@ const LicenseGuide: React.FC = () => {
                 <div className={`w-2 h-2 rounded-full ${lic.permissiveness > 80 ? 'bg-emerald-500' : 'bg-rose-500'}`} />
               </div>
               <p className="text-slate-500 dark:text-slate-400 text-xs mb-6 leading-relaxed flex-grow font-medium">
+                {/* Fallback to original description if needed, as database is mostly in Chinese currently */}
                 {lic.description}
               </p>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                    <div>
-                     <span className="text-[9px] font-black text-slate-400 uppercase block mb-1.5">Can Do</span>
+                     <span className="text-[9px] font-black text-slate-400 uppercase block mb-1.5">{t('guide.details.canDo')}</span>
                      <div className="space-y-1">
-                        {lic.permissions.commercial && <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Commercial Use</div>}
-                        {lic.permissions.modification && <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Modification</div>}
+                        {lic.permissions.commercial && <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{t('guide.details.commercial')}</div>}
+                        {lic.permissions.modification && <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{t('guide.details.modification')}</div>}
                      </div>
                    </div>
                    <div>
-                     <span className="text-[9px] font-black text-slate-400 uppercase block mb-1.5">Must Do</span>
+                     <span className="text-[9px] font-black text-slate-400 uppercase block mb-1.5">{t('guide.details.mustDo')}</span>
                      <div className="space-y-1">
-                        {lic.conditions.notice && <div className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">Include Notice</div>}
-                        {lic.conditions.sameLicense && <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Share Source</div>}
+                        {lic.conditions.notice && <div className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">{t('guide.details.notice')}</div>}
+                        {lic.conditions.sameLicense && <div className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">{t('guide.details.shareSource')}</div>}
                      </div>
                    </div>
                 </div>
@@ -89,10 +92,10 @@ const LicenseGuide: React.FC = () => {
           <table className="w-full text-left">
             <thead className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/10">
               <tr>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">License</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Comm.</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Modify</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">Copyleft</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">{t('guide.table.license')}</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">{t('guide.table.comm')}</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">{t('guide.table.modify')}</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">{t('guide.table.copyleft')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -103,7 +106,7 @@ const LicenseGuide: React.FC = () => {
                   <td className="px-6 py-4">{lic.permissions.modification ? <Check className="w-4 h-4 text-emerald-500" /> : <X className="w-4 h-4 text-rose-500" />}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${lic.conditions.sameLicense ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' : 'text-slate-400'}`}>
-                      {lic.conditions.sameLicense ? 'Required' : 'None'}
+                      {lic.conditions.sameLicense ? t('guide.table.required') : t('guide.table.none')}
                     </span>
                   </td>
                 </tr>
@@ -116,8 +119,8 @@ const LicenseGuide: React.FC = () => {
       {activeTab === 'stats' && (
         <div className="bg-white dark:bg-[#0A0A0A] p-8 rounded-2xl border border-slate-200 dark:border-white/10 h-[500px]">
           <div className="mb-8">
-            <h3 className="text-lg font-bold text-black dark:text-white mb-1">Permissiveness Index</h3>
-            <p className="text-xs text-slate-500 font-medium">Relative score of commercial freedom.</p>
+            <h3 className="text-lg font-bold text-black dark:text-white mb-1">{t('guide.stats.title')}</h3>
+            <p className="text-xs text-slate-500 font-medium">{t('guide.stats.desc')}</p>
           </div>
           <ResponsiveContainer width="100%" height="80%">
             <BarChart data={chartData} layout="vertical">

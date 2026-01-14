@@ -16,7 +16,7 @@ const resources = {
         desc: 'Scans package lists, verifies licenses, and flags compliance risks automatically.',
         inputLabel: 'Dependency Input',
         loadExample: 'Load Example',
-        placeholder: 'Paste package.json, requirements.txt, go.mod, pom.xml, Cargo.toml or build.gradle content here...',
+        placeholder: 'Paste your dependency file content here...',
         urlPlaceholder: 'Enter URL (e.g., GitHub Raw URL)...',
         fetchBtn: 'Fetch',
         run: 'Run Audit',
@@ -28,7 +28,91 @@ const resources = {
         resultsTitle: 'Audit Results Breakdown',
         riskHigh: 'High Risk First',
         riskSafe: 'Safe',
-        noDeps: 'No dependencies identified. Please paste a valid dependency list or provide a URL.'
+        noDeps: 'No dependencies identified. Please paste a valid dependency list or provide a URL.',
+        supportedTitle: 'Supported Formats',
+        formats: {
+          npm: { name: 'Node.js', file: 'package.json' },
+          python: { name: 'Python', file: 'requirements.txt' },
+          go: { name: 'Go', file: 'go.mod' },
+          rust: { name: 'Rust', file: 'Cargo.toml' },
+          maven: { name: 'Maven', file: 'pom.xml' },
+          gradle: { name: 'Gradle', file: 'build.gradle' },
+          swift: { name: 'Swift', file: 'Package.swift' }
+        }
+      },
+      guide: {
+        title: 'License Handbook',
+        desc: 'The definitive guide to understanding open source compliance for your business.',
+        tabs: {
+          details: 'License Details',
+          comparison: 'Comparison',
+          stats: 'Insights'
+        },
+        details: {
+          canDo: 'Can Do',
+          mustDo: 'Must Do',
+          commercial: 'Commercial Use',
+          modification: 'Modification',
+          notice: 'Include Notice',
+          shareSource: 'Share Source'
+        },
+        table: {
+          license: 'License',
+          comm: 'Comm.',
+          modify: 'Modify',
+          copyleft: 'Copyleft',
+          required: 'Required',
+          none: 'None'
+        },
+        stats: {
+          title: 'Permissiveness Index',
+          desc: 'Relative score of commercial freedom.'
+        }
+      },
+      selector: {
+        title: 'License Selector',
+        desc: "Not sure which license to choose? Select your priorities and we'll find the best fit.",
+        priorities: 'Project Priorities',
+        recommendations: 'Recommendations',
+        matches_zero: 'No matches found',
+        matches_one: '1 match found',
+        matches_other: '{{count}} matches found',
+        empty: 'Select at least one priority on the left to see results.',
+        noMatches: 'No licenses perfectly match these conflicting criteria. Try adjusting your selections.',
+        topPick: 'Top Pick',
+        whyMatch: 'Why it matches',
+        viewHandbook: 'View Handbook',
+        freedom: 'Freedom',
+        clear: 'Clear selections',
+        criteria: {
+          permissive: {
+            label: 'Permissive',
+            desc: 'Allow anyone to use the code for any purpose, even proprietary.'
+          },
+          copyleft: {
+            label: 'Copyleft',
+            desc: 'Ensure that derivative works also remain open source.'
+          },
+          patent: {
+            label: 'Patent Protection',
+            desc: 'Explicit protection against patent litigation from contributors.'
+          },
+          saas: {
+            label: 'SaaS Friendly',
+            desc: 'Closing the SaaS loophole: users over a network must get source.'
+          },
+          attribution: {
+            label: 'Attribution',
+            desc: 'Require users to include the original license/copyright notice.'
+          }
+        },
+        reasons: {
+          proprietary: 'It allows commercial/proprietary use without sharing back.',
+          stayFree: 'It ensures your code and its derivatives stay free.',
+          patentGrant: 'Provides explicit patent grants.',
+          saasEnforce: 'Designed specifically for network/SaaS enforcement.',
+          keepNotice: 'Requires users to keep your copyright notice.'
+        }
       },
       summary: {
         total: 'Total Inspected',
@@ -69,7 +153,7 @@ const resources = {
         desc: '智能扫描包列表，验证协议合规性并自动标记风险。',
         inputLabel: '依赖输入',
         loadExample: '加载示例',
-        placeholder: '在此粘贴 package.json, requirements.txt, go.mod, pom.xml, Cargo.toml 或 build.gradle 内容...',
+        placeholder: '在此粘贴您的依赖文件内容...',
         urlPlaceholder: '输入 URL (例如 GitHub Raw 链接)...',
         fetchBtn: '获取',
         run: '开始审计',
@@ -81,7 +165,91 @@ const resources = {
         resultsTitle: '审计结果分析',
         riskHigh: '高风险优先',
         riskSafe: '安全',
-        noDeps: '未识别到有效依赖。请粘贴有效的依赖列表或输入 URL。'
+        noDeps: '未识别到有效依赖。请粘贴有效的依赖列表或输入 URL。',
+        supportedTitle: '支持的格式',
+        formats: {
+          npm: { name: 'Node.js', file: 'package.json' },
+          python: { name: 'Python', file: 'requirements.txt' },
+          go: { name: 'Go', file: 'go.mod' },
+          rust: { name: 'Rust', file: 'Cargo.toml' },
+          maven: { name: 'Maven', file: 'pom.xml' },
+          gradle: { name: 'Gradle', file: 'build.gradle' },
+          swift: { name: 'Swift', file: 'Package.swift' }
+        }
+      },
+      guide: {
+        title: '许可证协议指南',
+        desc: '为您的业务理解开源合规性的权威指南。',
+        tabs: {
+          details: '协议详情',
+          comparison: '横向对比',
+          stats: '深度见解'
+        },
+        details: {
+          canDo: '允许事项',
+          mustDo: '必须事项',
+          commercial: '商业使用',
+          modification: '代码修改',
+          notice: '保留声明',
+          shareSource: '开源源代码'
+        },
+        table: {
+          license: '许可证',
+          comm: '商业',
+          modify: '修改',
+          copyleft: '传染性',
+          required: '强制',
+          none: '无限制'
+        },
+        stats: {
+          title: '宽松度指数',
+          desc: '商业自由度的相对得分。'
+        }
+      },
+      selector: {
+        title: '许可证选择器',
+        desc: '不确定该使用哪种协议？选择您的需求，我们将为您找到最佳匹配。',
+        priorities: '项目优先级',
+        recommendations: '推荐方案',
+        matches_zero: '未找到匹配项',
+        matches_one: '找到 1 个匹配项',
+        matches_other: '找到 {{count}} 个匹配项',
+        empty: '请在左侧至少选择一个优先级以查看结果。',
+        noMatches: '没有许可证能完美匹配这些冲突的标准。请尝试调整您的选择。',
+        topPick: '首选推荐',
+        whyMatch: '匹配原因',
+        viewHandbook: '查看指南',
+        freedom: '自由度',
+        clear: '清除选择',
+        criteria: {
+          permissive: {
+            label: '宽松授权',
+            desc: '允许任何人出于任何目的使用代码，甚至是闭源商业用途。'
+          },
+          copyleft: {
+            label: '传染性 (Copyleft)',
+            desc: '确保衍生作品也必须保持开源。'
+          },
+          patent: {
+            label: '专利保护',
+            desc: '明确保护开发者和使用者免受专利诉讼。'
+          },
+          saas: {
+            label: 'SaaS 友好',
+            desc: '弥补 SaaS 漏洞：通过网络提供服务的用户也必须能获取源码。'
+          },
+          attribution: {
+            label: '署名要求',
+            desc: '要求用户保留原始的许可证和版权声明。'
+          }
+        },
+        reasons: {
+          proprietary: '它允许商业/闭源使用，无需回馈社区。',
+          stayFree: '它确保您的代码及其衍生作品始终保持免费。',
+          patentGrant: '提供了明确的专利授权。',
+          saasEnforce: '专为网络/SaaS 环境下的源码强制公开而设计。',
+          keepNotice: '要求用户保留您的版权声明。'
+        }
       },
       summary: {
         total: '检测总量',
