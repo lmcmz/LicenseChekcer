@@ -3,7 +3,7 @@ import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { DependencyAudit, RiskLevel } from '../types';
 import * as d3Hierarchy from 'd3-hierarchy';
 import { linkHorizontal } from 'd3-shape';
-import { zoom, zoomIdentity } from 'd3-zoom';
+import { zoom, zoomIdentity, D3ZoomEvent } from 'd3-zoom';
 import { select } from 'd3-selection';
 import 'd3-transition';
 import { Info, ExternalLink, ZoomIn, ZoomOut, Maximize, MousePointer2, X, Globe, Github } from 'lucide-react';
@@ -51,8 +51,8 @@ const VisualTree: React.FC<VisualTreeProps> = ({ audits }) => {
 
     const zoomBehavior = zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 3])
-      .on('zoom', (event) => {
-        gElement.attr('transform', event.transform);
+      .on('zoom', (event: D3ZoomEvent<SVGSVGElement, unknown>) => {
+        gElement.attr('transform', event.transform.toString());
         setZoomLevel(event.transform.k);
       });
 
@@ -115,7 +115,7 @@ const VisualTree: React.FC<VisualTreeProps> = ({ audits }) => {
       
       <svg ref={svgRef} width="100%" height="100%" className="cursor-grab active:cursor-grabbing outline-none">
         <g ref={gRef}>
-          {links.map((link, i) => (
+          {links.map((link: d3Hierarchy.HierarchyLink<any>, i: number) => (
             <path
               key={`link-${i}`}
               d={linkHorizontal<any, any>()
@@ -130,7 +130,7 @@ const VisualTree: React.FC<VisualTreeProps> = ({ audits }) => {
               strokeDasharray="4"
             />
           ))}
-          {nodes.map((node, i) => (
+          {nodes.map((node: d3Hierarchy.HierarchyPointNode<any>, i: number) => (
             <g
               key={`node-${i}`}
               transform={`translate(${node.y},${node.x})`}
