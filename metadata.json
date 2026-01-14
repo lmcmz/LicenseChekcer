@@ -1,0 +1,5 @@
+{
+  "name": "LicenseGuard Audit",
+  "description": "An intelligent dependency license compliance auditor that scans package files (npm, python, etc.) to identify open-source risks and ensure legal safety.",
+  "requestFramePermissions": []
+}
