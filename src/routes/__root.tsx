@@ -42,6 +42,7 @@ export const Route = createRootRoute({
       ],
       links: [
         { rel: 'icon', href: '/favicon.ico' },
+        { rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css' },
       ],
     };
   },

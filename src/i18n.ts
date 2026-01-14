@@ -31,13 +31,13 @@ const resources = {
         noDeps: 'No dependencies identified. Please paste a valid dependency list or provide a URL.',
         supportedTitle: 'Supported Formats',
         formats: {
-          npm: { name: 'Node.js', file: 'package.json' },
-          python: { name: 'Python', file: 'requirements.txt' },
-          go: { name: 'Go', file: 'go.mod' },
-          rust: { name: 'Rust', file: 'Cargo.toml' },
+          npm: { name: 'Node.js', file: 'package.json, package-lock.json, yarn.lock' },
+          python: { name: 'Python', file: 'requirements.txt, Pipfile.lock' },
+          go: { name: 'Go', file: 'go.mod, go.sum' },
+          rust: { name: 'Rust', file: 'Cargo.toml, Cargo.lock' },
           maven: { name: 'Maven', file: 'pom.xml' },
           gradle: { name: 'Gradle', file: 'build.gradle' },
-          swift: { name: 'Swift', file: 'Package.swift' }
+          swift: { name: 'Swift', file: 'Package.swift, Package.resolved' }
         }
       },
       guide: {
@@ -168,13 +168,13 @@ const resources = {
         noDeps: '未识别到有效依赖。请粘贴有效的依赖列表或输入 URL。',
         supportedTitle: '支持的格式',
         formats: {
-          npm: { name: 'Node.js', file: 'package.json' },
-          python: { name: 'Python', file: 'requirements.txt' },
-          go: { name: 'Go', file: 'go.mod' },
-          rust: { name: 'Rust', file: 'Cargo.toml' },
+          npm: { name: 'Node.js', file: 'package.json, package-lock.json, yarn.lock' },
+          python: { name: 'Python', file: 'requirements.txt, Pipfile.lock' },
+          go: { name: 'Go', file: 'go.mod, go.sum' },
+          rust: { name: 'Rust', file: 'Cargo.toml, Cargo.lock' },
           maven: { name: 'Maven', file: 'pom.xml' },
           gradle: { name: 'Gradle', file: 'build.gradle' },
-          swift: { name: 'Swift', file: 'Package.swift' }
+          swift: { name: 'Swift', file: 'Package.swift, Package.resolved' }
         }
       },
       guide: {

@@ -56,17 +56,28 @@ const Settings2 = ({ className }: { className?: string }) => (
   <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
 );
 
-const EcosystemIcon: React.FC<{ type: string; size?: string }> = ({ type, size = "w-5 h-5" }) => {
-  switch (type) {
-    case 'npm': return <div className="p-1.5 rounded-lg bg-[#CB3837]/10 text-[#CB3837]"><Boxes className={size} /></div>;
-    case 'python': return <div className="p-1.5 rounded-lg bg-[#3776AB]/10 text-[#3776AB]"><Code2 className={size} /></div>;
-    case 'go': return <div className="p-1.5 rounded-lg bg-[#00ADD8]/10 text-[#00ADD8]"><Database className={size} /></div>;
-    case 'rust': return <div className="p-1.5 rounded-lg bg-[#000000]/10 dark:bg-white/10 text-black dark:text-white"><Cpu className={size} /></div>;
-    case 'maven': return <div className="p-1.5 rounded-lg bg-[#C71A36]/10 text-[#C71A36]"><Package className={size} /></div>;
-    case 'gradle': return <div className="p-1.5 rounded-lg bg-[#02303A]/10 text-[#02303A] dark:text-[#00DE7A]"><Settings2 className={size} /></div>;
-    case 'swift': return <div className="p-1.5 rounded-lg bg-[#F05138]/10 text-[#F05138]"><Layers className={size} /></div>;
-    default: return <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-400"><Search className={size} /></div>;
-  }
+const EcosystemIcon: React.FC<{ type: string; size?: string }> = ({ type, size = "text-2xl" }) => {
+  const iconMap: Record<string, { icon: string; bg: string; color: string }> = {
+    npm: { icon: 'devicon-npm-original-wordmark', bg: 'bg-[#CB3837]/10', color: 'text-[#CB3837]' },
+    python: { icon: 'devicon-python-plain', bg: 'bg-[#3776AB]/10', color: 'text-[#3776AB]' },
+    go: { icon: 'devicon-go-plain', bg: 'bg-[#00ADD8]/10', color: 'text-[#00ADD8]' },
+    rust: { icon: 'devicon-rust-plain', bg: 'bg-[#CE412B]/10', color: 'text-[#CE412B]' },
+    maven: { icon: 'devicon-maven-plain', bg: 'bg-[#C71A36]/10', color: 'text-[#C71A36]' },
+    gradle: { icon: 'devicon-gradle-plain', bg: 'bg-[#02303A]/10 dark:bg-[#00DE7A]/10', color: 'text-[#02303A] dark:text-[#00DE7A]' },
+    swift: { icon: 'devicon-swift-plain', bg: 'bg-[#F05138]/10', color: 'text-[#F05138]' },
+  };
+
+  const config = iconMap[type] || { icon: '', bg: 'bg-slate-100 dark:bg-white/5', color: 'text-slate-400' };
+
+  return (
+    <div className={`p-1.5 rounded-lg ${config.bg} ${config.color} flex items-center justify-center`}>
+      {config.icon ? (
+        <i className={`${config.icon} ${size}`}></i>
+      ) : (
+        <Search className="w-5 h-5" />
+      )}
+    </div>
+  );
 };
 
 const AuditView: React.FC = () => {
@@ -277,7 +288,7 @@ const AuditView: React.FC = () => {
               />
               <div className="p-4 flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5">
                 <div className="text-[10px] font-medium text-slate-400 uppercase tracking-tight">
-                  Support: NPM, Maven, Go, Rust, Gradle, Swift
+                  Support: NPM, Maven, Go, Rust, Gradle, Swift + Lock Files
                 </div>
                 <button
                   onClick={runAudit}
@@ -306,8 +317,8 @@ const AuditView: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-1.5">
                     {ecosystems.slice(0, 4).map(eco => (
-                      <div key={eco} className="w-5 h-5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 flex items-center justify-center">
-                        <EcosystemIcon type={eco} size="w-2.5 h-2.5" />
+                      <div key={eco} className="w-5 h-5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 flex items-center justify-center overflow-hidden">
+                        <EcosystemIcon type={eco} size="text-xs" />
                       </div>
                     ))}
                     <div className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-white/10 flex items-center justify-center text-[8px] font-bold">
