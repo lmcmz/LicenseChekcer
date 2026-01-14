@@ -1,4 +1,0 @@
-const tsrStartManifest = () => ({ "routes": { "__root__": { "filePath": "/Users/lmcmz/outblock/LicenseChekcer/src/routes/__root.tsx", "children": ["/", "/guide", "/selector"], "preloads": ["/assets/main-EGICLitK.js"], "assets": [] }, "/": { "filePath": "/Users/lmcmz/outblock/LicenseChekcer/src/routes/index.tsx", "assets": [], "preloads": ["/assets/index-DY7esZSU.js", "/assets/localDatabase-DpUBSDud.js", "/assets/info-CQWR5KFp.js", "/assets/string-BiPMbYnx.js"] }, "/guide": { "filePath": "/Users/lmcmz/outblock/LicenseChekcer/src/routes/guide.tsx", "assets": [], "preloads": ["/assets/guide-DTYyAZEa.js", "/assets/localDatabase-DpUBSDud.js", "/assets/string-BiPMbYnx.js"] }, "/selector": { "filePath": "/Users/lmcmz/outblock/LicenseChekcer/src/routes/selector.tsx", "assets": [], "preloads": ["/assets/selector-RlBo7PrK.js", "/assets/localDatabase-DpUBSDud.js", "/assets/info-CQWR5KFp.js"] } }, "clientEntry": "/assets/main-EGICLitK.js" });
-export {
-  tsrStartManifest
-};

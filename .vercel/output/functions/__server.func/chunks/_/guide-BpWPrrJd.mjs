@@ -3,7 +3,7 @@ import * as React from "react";
 import { isValidElement, forwardRef, createContext, useContext, useState, useCallback, useMemo, useRef, useImperativeHandle, useEffect, PureComponent, useLayoutEffect, cloneElement, createElement, Children, memo } from "react";
 import { useTranslation } from "react-i18next";
 import { L as LICENSE_DETAILS } from "./localDatabase-DDum4fks.mjs";
-import { c as createLucideIcon, X } from "./router-Cdb7niDA.mjs";
+import { c as createLucideIcon, X } from "./router-sHqUyFtU.mjs";
 import { clsx } from "clsx";
 import throttle from "es-toolkit/compat/throttle";
 import get from "es-toolkit/compat/get";

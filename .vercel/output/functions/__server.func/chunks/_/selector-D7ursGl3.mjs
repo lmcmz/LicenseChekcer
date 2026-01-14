@@ -2,7 +2,7 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { L as LICENSE_DETAILS } from "./localDatabase-DDum4fks.mjs";
-import { c as createLucideIcon, S as ShieldCheck } from "./router-Cdb7niDA.mjs";
+import { c as createLucideIcon, S as ShieldCheck } from "./router-sHqUyFtU.mjs";
 import { A as ArrowRight, G as Globe, I as Info } from "./info.mjs";
 import "@tanstack/react-router";
 import "i18next";

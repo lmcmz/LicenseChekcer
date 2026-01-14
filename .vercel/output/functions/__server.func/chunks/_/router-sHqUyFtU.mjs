@@ -1,6 +1,6 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 import React__default, { forwardRef, createElement, useState, useEffect } from "react";
-import { createRouter, RouterProvider, createRootRoute, createFileRoute, lazyRouteComponent, HeadContent, Scripts, useLocation, Link, Outlet } from "@tanstack/react-router";
+import { createRouter, RouterProvider, createRootRoute, createFileRoute, lazyRouteComponent, HeadContent, Outlet, Scripts, useLocation, Link } from "@tanstack/react-router";
 import i18n from "i18next";
 import { useTranslation, initReactI18next } from "react-i18next";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
@@ -173,13 +173,13 @@ const resources = {
         noDeps: "No dependencies identified. Please paste a valid dependency list or provide a URL.",
         supportedTitle: "Supported Formats",
         formats: {
-          npm: { name: "Node.js", file: "package.json" },
-          python: { name: "Python", file: "requirements.txt" },
-          go: { name: "Go", file: "go.mod" },
-          rust: { name: "Rust", file: "Cargo.toml" },
+          npm: { name: "Node.js", file: "package.json, package-lock.json, yarn.lock" },
+          python: { name: "Python", file: "requirements.txt, Pipfile.lock" },
+          go: { name: "Go", file: "go.mod, go.sum" },
+          rust: { name: "Rust", file: "Cargo.toml, Cargo.lock" },
           maven: { name: "Maven", file: "pom.xml" },
           gradle: { name: "Gradle", file: "build.gradle" },
-          swift: { name: "Swift", file: "Package.swift" }
+          swift: { name: "Swift", file: "Package.swift, Package.resolved" }
         }
       },
       guide: {
@@ -310,13 +310,13 @@ const resources = {
         noDeps: "未识别到有效依赖。请粘贴有效的依赖列表或输入 URL。",
         supportedTitle: "支持的格式",
         formats: {
-          npm: { name: "Node.js", file: "package.json" },
-          python: { name: "Python", file: "requirements.txt" },
-          go: { name: "Go", file: "go.mod" },
-          rust: { name: "Rust", file: "Cargo.toml" },
+          npm: { name: "Node.js", file: "package.json, package-lock.json, yarn.lock" },
+          python: { name: "Python", file: "requirements.txt, Pipfile.lock" },
+          go: { name: "Go", file: "go.mod, go.sum" },
+          rust: { name: "Rust", file: "Cargo.toml, Cargo.lock" },
           maven: { name: "Maven", file: "pom.xml" },
           gradle: { name: "Gradle", file: "build.gradle" },
-          swift: { name: "Swift", file: "Package.swift" }
+          swift: { name: "Swift", file: "Package.swift, Package.resolved" }
         }
       },
       guide: {
@@ -422,16 +422,17 @@ const resources = {
 };
 i18n.use(initReactI18next).init({
   resources,
-  lng: localStorage.getItem("licensechecker_lang") || "en",
+  lng: typeof window !== "undefined" ? localStorage.getItem("licensechecker_lang") || "en" : "en",
   fallbackLng: "en",
   interpolation: {
     escapeValue: false
   }
 });
-const Layout = () => {
+const Layout = ({ children }) => {
   const { t, i18n: i18n2 } = useTranslation();
   const location = useLocation();
   const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") return "dark";
     const saved = localStorage.getItem("licensechecker_theme");
     return saved || "dark";
   });
@@ -444,13 +445,17 @@ const Layout = () => {
       document.documentElement.classList.remove("dark");
       document.body.classList.remove("dark");
     }
-    localStorage.setItem("licensechecker_theme", theme);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("licensechecker_theme", theme);
+    }
   }, [theme]);
   const toggleTheme = () => setTheme((prev) => prev === "light" ? "dark" : "light");
   const toggleLanguage = () => {
     const newLang = i18n2.language === "en" ? "zh" : "en";
     i18n2.changeLanguage(newLang);
-    localStorage.setItem("licensechecker_lang", newLang);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("licensechecker_lang", newLang);
+    }
   };
   const isActive = (path) => location.pathname === path;
   return /* @__PURE__ */ jsxs("div", { className: "min-h-screen bg-white dark:bg-[#000] text-slate-900 dark:text-slate-100 transition-colors duration-200 font-sans selection:bg-blue-500/30", children: [
@@ -534,7 +539,7 @@ const Layout = () => {
         setIsMenuOpen(false);
       }, className: "flex items-center gap-2 text-left", children: t("nav.lang") })
     ] }) }),
-    /* @__PURE__ */ jsx("main", { children: /* @__PURE__ */ jsx(Outlet, {}) }),
+    /* @__PURE__ */ jsx("main", { children }),
     /* @__PURE__ */ jsx("footer", { className: "border-t border-slate-200 dark:border-white/10 py-12 mt-20", children: /* @__PURE__ */ jsxs("div", { className: "max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6", children: [
       /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 text-slate-400 text-xs font-medium", children: [
         "© 2024 License Checker — ",
@@ -576,7 +581,8 @@ const Route$3 = createRootRoute({
         }
       ],
       links: [
-        { rel: "icon", href: "/favicon.ico" }
+        { rel: "icon", href: "/favicon.ico" },
+        { rel: "stylesheet", href: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" }
       ]
     };
   },
@@ -591,7 +597,7 @@ function RootDocument() {
     ] }),
     /* @__PURE__ */ jsxs("body", { children: [
       /* @__PURE__ */ jsxs(QueryClientProvider, { client: queryClient, children: [
-        /* @__PURE__ */ jsx(Layout, {}),
+        /* @__PURE__ */ jsx(Layout, { children: /* @__PURE__ */ jsx(Outlet, {}) }),
         /* @__PURE__ */ jsx(Analytics, {})
       ] }),
       /* @__PURE__ */ jsx(Scripts, {})
@@ -606,7 +612,7 @@ const $$splitComponentImporter$1 = () => import("./guide-BpWPrrJd.mjs");
 const Route$1 = createFileRoute("/guide")({
   component: lazyRouteComponent($$splitComponentImporter$1, "component")
 });
-const $$splitComponentImporter = () => import("./index-Bs9K0V2S.mjs");
+const $$splitComponentImporter = () => import("./index-e3TIYRdd.mjs");
 const Route = createFileRoute("/")({
   component: lazyRouteComponent($$splitComponentImporter, "component")
 });
@@ -639,7 +645,7 @@ const AppRouterProvider = () => {
   const router = React__default.useMemo(() => getRouter(), []);
   return /* @__PURE__ */ jsx(RouterProvider, { router });
 };
-const routerCdb7niDA = /* @__PURE__ */ Object.freeze({
+const routerSHqUyFtU = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   AppRouterProvider,
   getRouter
@@ -649,5 +655,5 @@ export {
   ShieldCheck as S,
   X,
   createLucideIcon as c,
-  routerCdb7niDA as r
+  routerSHqUyFtU as r
 };

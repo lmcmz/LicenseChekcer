@@ -534,6 +534,17 @@ function callMiddleware(event, middleware, handler, index = 0) {
 function isUnhandledResponse(val) {
   return val === void 0 || val === kNotFound;
 }
+function toRequest(input, options) {
+  if (typeof input === "string") {
+    let url = input;
+    if (url[0] === "/") {
+      const host = "localhost";
+      url = `${"http"}://${host}${url}`;
+    }
+    return new Request(url, options);
+  } else if (input instanceof URL) return new Request(input, options);
+  return input;
+}
 function defineHandler(input) {
   if (typeof input === "function") return handlerWithFetch(input);
   const handler = input.handler || (input.fetch ? function _fetchHandler(event) {
@@ -707,11 +718,11 @@ const findRouteRules = /* @__PURE__ */ (() => {
     return r;
   };
 })();
-const _lazy_ef4uq8 = defineLazyEventHandler(() => Promise.resolve().then(function() {
-  return rendererTemplate;
+const _lazy_HQoTY2 = defineLazyEventHandler(() => Promise.resolve().then(function() {
+  return ssrRenderer$1;
 }));
 const findRoute = /* @__PURE__ */ (() => {
-  const data = { route: "/**", handler: _lazy_ef4uq8 };
+  const data = { route: "/**", handler: _lazy_HQoTY2 };
   return ((_m, p) => {
     return { data, params: { "_": p.slice(1) } };
   });
@@ -838,13 +849,20 @@ const vercel_web = { fetch(req, context) {
   req.waitUntil = context?.waitUntil;
   return nitroApp.fetch(req);
 } };
-const rendererTemplate$1 = () => new HTTPResponse('<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <meta name="viewport" content="width=device-width, initial-scale=1.0" />\n    <title>License Checker</title>\n  </head>\n  <body>\n    <div id="root"></div>\n    <script type="module" src="/src/App.tsx"><\/script>\n  </body>\n</html>\n', { headers: { "content-type": "text/html; charset=utf-8" } });
-function renderIndexHTML(event) {
-  return rendererTemplate$1(event.req);
+function fetchViteEnv(viteEnvName, input, init) {
+  const envs = globalThis.__nitro_vite_envs__ || {};
+  const viteEnv = envs[viteEnvName];
+  if (!viteEnv) {
+    throw HTTPError.status(404);
+  }
+  return Promise.resolve(viteEnv.fetch(toRequest(input, init)));
 }
-const rendererTemplate = /* @__PURE__ */ Object.freeze({
+function ssrRenderer({ req }) {
+  return fetchViteEnv("ssr", req);
+}
+const ssrRenderer$1 = /* @__PURE__ */ Object.freeze({
   __proto__: null,
-  default: renderIndexHTML
+  default: ssrRenderer
 });
 export {
   NullProtoObj as N,

@@ -6,147 +6,61 @@ import * as d3Hierarchy from "d3-hierarchy";
 import { linkHorizontal } from "d3-shape";
 import { zoom, zoomIdentity } from "d3-zoom";
 import { select } from "d3-selection";
-import { c as createLucideIcon, X, G as Github } from "./router-Cdb7niDA.mjs";
+import { c as createLucideIcon, X, G as Github } from "./router-sHqUyFtU.mjs";
 import { A as ArrowRight, I as Info, G as Globe } from "./info.mjs";
 import "@tanstack/react-router";
 import "i18next";
 import "@tanstack/react-query";
 import "@vercel/analytics/react";
-const __iconNode$m = [
+const __iconNode$g = [
   ["path", { d: "M12 5v14", key: "s699le" }],
   ["path", { d: "m19 12-7 7-7-7", key: "1idqje" }]
 ];
-const ArrowDown = createLucideIcon("arrow-down", __iconNode$m);
-const __iconNode$l = [
+const ArrowDown = createLucideIcon("arrow-down", __iconNode$g);
+const __iconNode$f = [
   ["path", { d: "m5 12 7-7 7 7", key: "hav0vg" }],
   ["path", { d: "M12 19V5", key: "x0mq9r" }]
 ];
-const ArrowUp = createLucideIcon("arrow-up", __iconNode$l);
-const __iconNode$k = [
-  [
-    "path",
-    {
-      d: "M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z",
-      key: "lc1i9w"
-    }
-  ],
-  ["path", { d: "m7 16.5-4.74-2.85", key: "1o9zyk" }],
-  ["path", { d: "m7 16.5 5-3", key: "va8pkn" }],
-  ["path", { d: "M7 16.5v5.17", key: "jnp8gn" }],
-  [
-    "path",
-    {
-      d: "M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z",
-      key: "8zsnat"
-    }
-  ],
-  ["path", { d: "m17 16.5-5-3", key: "8arw3v" }],
-  ["path", { d: "m17 16.5 4.74-2.85", key: "8rfmw" }],
-  ["path", { d: "M17 16.5v5.17", key: "k6z78m" }],
-  [
-    "path",
-    {
-      d: "M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8Z",
-      key: "1xygjf"
-    }
-  ],
-  ["path", { d: "M12 8 7.26 5.15", key: "1vbdud" }],
-  ["path", { d: "m12 8 4.74-2.85", key: "3rx089" }],
-  ["path", { d: "M12 13.5V8", key: "1io7kd" }]
-];
-const Boxes = createLucideIcon("boxes", __iconNode$k);
-const __iconNode$j = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-const ChevronDown = createLucideIcon("chevron-down", __iconNode$j);
-const __iconNode$i = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
-const ChevronRight = createLucideIcon("chevron-right", __iconNode$i);
-const __iconNode$h = [
+const ArrowUp = createLucideIcon("arrow-up", __iconNode$f);
+const __iconNode$e = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$e);
+const __iconNode$d = [["path", { d: "m9 18 6-6-6-6", key: "mthhwq" }]];
+const ChevronRight = createLucideIcon("chevron-right", __iconNode$d);
+const __iconNode$c = [
   ["path", { d: "M12 13v8l-4-4", key: "1f5nwf" }],
   ["path", { d: "m12 21 4-4", key: "1lfcce" }],
   ["path", { d: "M4.393 15.269A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.436 8.284", key: "ui1hmy" }]
 ];
-const CloudDownload = createLucideIcon("cloud-download", __iconNode$h);
-const __iconNode$g = [
-  ["path", { d: "m18 16 4-4-4-4", key: "1inbqp" }],
-  ["path", { d: "m6 8-4 4 4 4", key: "15zrgr" }],
-  ["path", { d: "m14.5 4-5 16", key: "e7oirm" }]
-];
-const CodeXml = createLucideIcon("code-xml", __iconNode$g);
-const __iconNode$f = [
-  ["path", { d: "M12 20v2", key: "1lh1kg" }],
-  ["path", { d: "M12 2v2", key: "tus03m" }],
-  ["path", { d: "M17 20v2", key: "1rnc9c" }],
-  ["path", { d: "M17 2v2", key: "11trls" }],
-  ["path", { d: "M2 12h2", key: "1t8f8n" }],
-  ["path", { d: "M2 17h2", key: "7oei6x" }],
-  ["path", { d: "M2 7h2", key: "asdhe0" }],
-  ["path", { d: "M20 12h2", key: "1q8mjw" }],
-  ["path", { d: "M20 17h2", key: "1fpfkl" }],
-  ["path", { d: "M20 7h2", key: "1o8tra" }],
-  ["path", { d: "M7 20v2", key: "4gnj0m" }],
-  ["path", { d: "M7 2v2", key: "1i4yhu" }],
-  ["rect", { x: "4", y: "4", width: "16", height: "16", rx: "2", key: "1vbyd7" }],
-  ["rect", { x: "8", y: "8", width: "8", height: "8", rx: "1", key: "z9xiuo" }]
-];
-const Cpu = createLucideIcon("cpu", __iconNode$f);
-const __iconNode$e = [
-  ["ellipse", { cx: "12", cy: "5", rx: "9", ry: "3", key: "msslwz" }],
-  ["path", { d: "M3 5V19A9 3 0 0 0 21 19V5", key: "1wlel7" }],
-  ["path", { d: "M3 12A9 3 0 0 0 21 12", key: "mv7ke4" }]
-];
-const Database = createLucideIcon("database", __iconNode$e);
-const __iconNode$d = [
+const CloudDownload = createLucideIcon("cloud-download", __iconNode$c);
+const __iconNode$b = [
   ["path", { d: "M15 3h6v6", key: "1q9fwt" }],
   ["path", { d: "M10 14 21 3", key: "gplh6r" }],
   ["path", { d: "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6", key: "a6xqqp" }]
 ];
-const ExternalLink = createLucideIcon("external-link", __iconNode$d);
-const __iconNode$c = [
-  [
-    "path",
-    {
-      d: "M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z",
-      key: "zw3jo"
-    }
-  ],
-  [
-    "path",
-    {
-      d: "M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12",
-      key: "1wduqc"
-    }
-  ],
-  [
-    "path",
-    {
-      d: "M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17",
-      key: "kqbvx6"
-    }
-  ]
-];
-const Layers = createLucideIcon("layers", __iconNode$c);
-const __iconNode$b = [
+const ExternalLink = createLucideIcon("external-link", __iconNode$b);
+const __iconNode$a = [
   ["rect", { width: "7", height: "7", x: "3", y: "3", rx: "1", key: "1g98yp" }],
   ["rect", { width: "7", height: "7", x: "14", y: "3", rx: "1", key: "6d4xhi" }],
   ["rect", { width: "7", height: "7", x: "14", y: "14", rx: "1", key: "nxv5o0" }],
   ["rect", { width: "7", height: "7", x: "3", y: "14", rx: "1", key: "1bb6yr" }]
 ];
-const LayoutGrid = createLucideIcon("layout-grid", __iconNode$b);
-const __iconNode$a = [
+const LayoutGrid = createLucideIcon("layout-grid", __iconNode$a);
+const __iconNode$9 = [
   ["path", { d: "M9 17H7A5 5 0 0 1 7 7h2", key: "8i5ue5" }],
   ["path", { d: "M15 7h2a5 5 0 1 1 0 10h-2", key: "1b9ql8" }],
   ["line", { x1: "8", x2: "16", y1: "12", y2: "12", key: "1jonct" }]
 ];
-const Link2 = createLucideIcon("link-2", __iconNode$a);
-const __iconNode$9 = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
-const LoaderCircle = createLucideIcon("loader-circle", __iconNode$9);
-const __iconNode$8 = [
+const Link2 = createLucideIcon("link-2", __iconNode$9);
+const __iconNode$8 = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
+const LoaderCircle = createLucideIcon("loader-circle", __iconNode$8);
+const __iconNode$7 = [
   ["path", { d: "M8 3H5a2 2 0 0 0-2 2v3", key: "1dcmit" }],
   ["path", { d: "M21 8V5a2 2 0 0 0-2-2h-3", key: "1e4gt3" }],
   ["path", { d: "M3 16v3a2 2 0 0 0 2 2h3", key: "wsl5sc" }],
   ["path", { d: "M16 21h3a2 2 0 0 0 2-2v-3", key: "18trek" }]
 ];
-const Maximize = createLucideIcon("maximize", __iconNode$8);
-const __iconNode$7 = [
+const Maximize = createLucideIcon("maximize", __iconNode$7);
+const __iconNode$6 = [
   [
     "path",
     {
@@ -155,28 +69,15 @@ const __iconNode$7 = [
     }
   ]
 ];
-const MousePointer2 = createLucideIcon("mouse-pointer-2", __iconNode$7);
-const __iconNode$6 = [
+const MousePointer2 = createLucideIcon("mouse-pointer-2", __iconNode$6);
+const __iconNode$5 = [
   ["rect", { x: "16", y: "16", width: "6", height: "6", rx: "1", key: "4q2zg0" }],
   ["rect", { x: "2", y: "16", width: "6", height: "6", rx: "1", key: "8cvhb9" }],
   ["rect", { x: "9", y: "2", width: "6", height: "6", rx: "1", key: "1egb70" }],
   ["path", { d: "M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3", key: "1jsf9p" }],
   ["path", { d: "M12 12V8", key: "2874zd" }]
 ];
-const Network = createLucideIcon("network", __iconNode$6);
-const __iconNode$5 = [
-  [
-    "path",
-    {
-      d: "M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z",
-      key: "1a0edw"
-    }
-  ],
-  ["path", { d: "M12 22V12", key: "d0xqtd" }],
-  ["polyline", { points: "3.29 7 12 12 20.71 7", key: "ousv84" }],
-  ["path", { d: "m7.5 4.27 9 5.15", key: "1c824w" }]
-];
-const Package = createLucideIcon("package", __iconNode$5);
+const Network = createLucideIcon("network", __iconNode$5);
 const __iconNode$4 = [
   ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
   ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
@@ -281,6 +182,42 @@ const parseDependencies = (input) => {
         }
       }
     });
+    if (json.dependencies && typeof json.dependencies === "object" && !found) {
+      found = true;
+      Object.entries(json.dependencies).forEach(([name, data]) => {
+        if (data.version) {
+          results.push({ name, version: data.version });
+        }
+      });
+    }
+    if (json.packages && typeof json.packages === "object" && !found) {
+      found = true;
+      Object.entries(json.packages).forEach(([path, data]) => {
+        if (path && path !== "" && data.version) {
+          const name = path.replace(/^node_modules\//, "");
+          if (name && !name.includes("/node_modules/")) {
+            results.push({ name, version: data.version });
+          }
+        }
+      });
+    }
+    if ((json.default || json._meta) && !found) {
+      found = true;
+      const packages = json.default || {};
+      Object.entries(packages).forEach(([name, data]) => {
+        if (data.version) {
+          results.push({ name, version: data.version.replace(/^==/, "") });
+        }
+      });
+    }
+    if (json.packages && Array.isArray(json.packages) && !found) {
+      found = true;
+      json.packages.forEach((pkg) => {
+        if (pkg.name && pkg.version) {
+          results.push({ name: pkg.name, version: pkg.version });
+        }
+      });
+    }
     if (json.pins && Array.isArray(json.pins)) {
       found = true;
       json.pins.forEach((pin) => {
@@ -293,9 +230,28 @@ const parseDependencies = (input) => {
     if (found) return results;
   } catch (e) {
   }
-  const goRegex = /require\s+([^\s]+)\s+([^\s\n\r]+)/g;
   let match;
+  const yarnLockRegex = /"?([^@\s"]+)@[^:]*:\s*version\s+"([^"]+)"/g;
+  while ((match = yarnLockRegex.exec(trimmedInput)) !== null) {
+    results.push({ name: match[1], version: match[2] });
+  }
+  if (results.length > 0) return results;
+  const cargoLockRegex = /name\s*=\s*"([^"]+)"[\s\S]{0,200}?version\s*=\s*"([^"]+)"/g;
+  while ((match = cargoLockRegex.exec(trimmedInput)) !== null) {
+    results.push({ name: match[1], version: match[2] });
+  }
+  if (results.length > 0) return results;
+  const gemfileLockRegex = /^\s{4}(\S+)\s+\(([^)]+)\)/gm;
+  while ((match = gemfileLockRegex.exec(trimmedInput)) !== null) {
+    results.push({ name: match[1], version: match[2] });
+  }
+  if (results.length > 0) return results;
+  const goRegex = /require\s+([^\s]+)\s+([^\s\n\r]+)/g;
   while ((match = goRegex.exec(trimmedInput)) !== null) {
+    results.push({ name: match[1], version: match[2] });
+  }
+  const goSumRegex = /^([^\s]+)\s+(v[^\s]+)/gm;
+  while ((match = goSumRegex.exec(trimmedInput)) !== null) {
     results.push({ name: match[1], version: match[2] });
   }
   const rustRegex = /^([a-zA-Z0-9\-_]+)\s*=\s*["']?([^"'\n]+)["']?/gm;
@@ -334,30 +290,11 @@ const getBaseName = (url) => {
   const parts = url.replace(/\/$/, "").split("/");
   return parts[parts.length - 1].replace(/\.git$/, "");
 };
-const CACHE_KEY = "licenseguard_audit_cache_v1";
-const getAuditCache = () => {
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    return cached ? JSON.parse(cached) : {};
-  } catch (e) {
-    console.error("Failed to load audit cache", e);
-    return {};
-  }
-};
 const saveToCache = (audit) => {
-  try {
-    const cache = getAuditCache();
-    const key = `${audit.name.toLowerCase()}@${audit.version}`;
-    cache[key] = audit;
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
-  } catch (e) {
-    console.error("Failed to save to audit cache", e);
-  }
+  console.log("Cache save disabled - TODO: implement database storage");
 };
 const getFromCache = (name, version) => {
-  const cache = getAuditCache();
-  const key = `${name.toLowerCase()}@${version}`;
-  return cache[key] || null;
+  return null;
 };
 const RISK_SCORE = {
   [RiskLevel.HIGH]: 3,
@@ -685,31 +622,18 @@ const RISK_PRIORITY = {
   [RiskLevel.SAFE]: 1,
   [RiskLevel.UNKNOWN]: 0
 };
-const Settings2 = ({ className }) => /* @__PURE__ */ jsxs("svg", { className, xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", children: [
-  /* @__PURE__ */ jsx("path", { d: "M20 7h-9" }),
-  /* @__PURE__ */ jsx("path", { d: "M14 17H5" }),
-  /* @__PURE__ */ jsx("circle", { cx: "17", cy: "17", r: "3" }),
-  /* @__PURE__ */ jsx("circle", { cx: "7", cy: "7", r: "3" })
-] });
-const EcosystemIcon = ({ type, size = "w-5 h-5" }) => {
-  switch (type) {
-    case "npm":
-      return /* @__PURE__ */ jsx("div", { className: "p-1.5 rounded-lg bg-[#CB3837]/10 text-[#CB3837]", children: /* @__PURE__ */ jsx(Boxes, { className: size }) });
-    case "python":
-      return /* @__PURE__ */ jsx("div", { className: "p-1.5 rounded-lg bg-[#3776AB]/10 text-[#3776AB]", children: /* @__PURE__ */ jsx(CodeXml, { className: size }) });
-    case "go":
-      return /* @__PURE__ */ jsx("div", { className: "p-1.5 rounded-lg bg-[#00ADD8]/10 text-[#00ADD8]", children: /* @__PURE__ */ jsx(Database, { className: size }) });
-    case "rust":
-      return /* @__PURE__ */ jsx("div", { className: "p-1.5 rounded-lg bg-[#000000]/10 dark:bg-white/10 text-black dark:text-white", children: /* @__PURE__ */ jsx(Cpu, { className: size }) });
-    case "maven":
-      return /* @__PURE__ */ jsx("div", { className: "p-1.5 rounded-lg bg-[#C71A36]/10 text-[#C71A36]", children: /* @__PURE__ */ jsx(Package, { className: size }) });
-    case "gradle":
-      return /* @__PURE__ */ jsx("div", { className: "p-1.5 rounded-lg bg-[#02303A]/10 text-[#02303A] dark:text-[#00DE7A]", children: /* @__PURE__ */ jsx(Settings2, { className: size }) });
-    case "swift":
-      return /* @__PURE__ */ jsx("div", { className: "p-1.5 rounded-lg bg-[#F05138]/10 text-[#F05138]", children: /* @__PURE__ */ jsx(Layers, { className: size }) });
-    default:
-      return /* @__PURE__ */ jsx("div", { className: "p-1.5 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-400", children: /* @__PURE__ */ jsx(Search, { className: size }) });
-  }
+const EcosystemIcon = ({ type, size = "text-2xl" }) => {
+  const iconMap = {
+    npm: { icon: "devicon-npm-original-wordmark", bg: "bg-[#CB3837]/10", color: "text-[#CB3837]" },
+    python: { icon: "devicon-python-plain", bg: "bg-[#3776AB]/10", color: "text-[#3776AB]" },
+    go: { icon: "devicon-go-plain", bg: "bg-[#00ADD8]/10", color: "text-[#00ADD8]" },
+    rust: { icon: "devicon-rust-plain", bg: "bg-[#CE412B]/10", color: "text-[#CE412B]" },
+    maven: { icon: "devicon-maven-plain", bg: "bg-[#C71A36]/10", color: "text-[#C71A36]" },
+    gradle: { icon: "devicon-gradle-plain", bg: "bg-[#02303A]/10 dark:bg-[#00DE7A]/10", color: "text-[#02303A] dark:text-[#00DE7A]" },
+    swift: { icon: "devicon-swift-plain", bg: "bg-[#F05138]/10", color: "text-[#F05138]" }
+  };
+  const config = iconMap[type] || { icon: "", bg: "bg-slate-100 dark:bg-white/5", color: "text-slate-400" };
+  return /* @__PURE__ */ jsx("div", { className: `p-1.5 rounded-lg ${config.bg} ${config.color} flex items-center justify-center`, children: config.icon ? /* @__PURE__ */ jsx("i", { className: `${config.icon} ${size}` }) : /* @__PURE__ */ jsx(Search, { className: "w-5 h-5" }) });
 };
 const AuditView = () => {
   const { t } = useTranslation();
@@ -808,11 +732,7 @@ const AuditView = () => {
         updatedTasks[idx] = { ...updatedTasks[idx], status: "success", result: normalizeResult(result) };
         return;
       }
-      const cached = getFromCache(dep.name, dep.version);
-      if (cached) {
-        updatedTasks[idx] = { ...updatedTasks[idx], status: "success", result: normalizeResult(cached) };
-        return;
-      }
+      getFromCache(dep.name, dep.version);
       unknownQueue.push({ ...dep, index: idx });
       updatedTasks[idx].status = "loading";
     });
@@ -920,7 +840,7 @@ const AuditView = () => {
           }
         ),
         /* @__PURE__ */ jsxs("div", { className: "p-4 flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5", children: [
-          /* @__PURE__ */ jsx("div", { className: "text-[10px] font-medium text-slate-400 uppercase tracking-tight", children: "Support: NPM, Maven, Go, Rust, Gradle, Swift" }),
+          /* @__PURE__ */ jsx("div", { className: "text-[10px] font-medium text-slate-400 uppercase tracking-tight", children: "Support: NPM, Maven, Go, Rust, Gradle, Swift + Lock Files" }),
           /* @__PURE__ */ jsxs(
             "button",
             {
@@ -949,7 +869,7 @@ const AuditView = () => {
               ] }),
               /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
                 /* @__PURE__ */ jsxs("div", { className: "flex -space-x-1.5", children: [
-                  ecosystems.slice(0, 4).map((eco) => /* @__PURE__ */ jsx("div", { className: "w-5 h-5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 flex items-center justify-center", children: /* @__PURE__ */ jsx(EcosystemIcon, { type: eco, size: "w-2.5 h-2.5" }) }, eco)),
+                  ecosystems.slice(0, 4).map((eco) => /* @__PURE__ */ jsx("div", { className: "w-5 h-5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 flex items-center justify-center overflow-hidden", children: /* @__PURE__ */ jsx(EcosystemIcon, { type: eco, size: "text-xs" }) }, eco)),
                   /* @__PURE__ */ jsxs("div", { className: "w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-white/10 flex items-center justify-center text-[8px] font-bold", children: [
                     "+",
                     ecosystems.length - 4
