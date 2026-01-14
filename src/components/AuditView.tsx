@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DependencyAudit, RiskLevel } from '../types';
-import { auditDependenciesWithGemini } from '../services/geminiService';
+import { auditDependenciesWithBackend } from '../services/auditService';
 import { parseDependencies } from '../services/dependencyParser';
 import { KNOWN_PACKAGES, COMMON_LICENSES } from '../services/localDatabase';
 import { getFromCache, saveToCache } from '../services/cacheService';
@@ -182,7 +182,7 @@ const AuditView: React.FC = () => {
       return;
     }
     try {
-      const results = await auditDependenciesWithGemini(unknownQueue.map(q => ({ name: q.name, version: q.version })));
+      const results = await auditDependenciesWithBackend(unknownQueue.map(q => ({ name: q.name, version: q.version })));
       setTasks(prev => {
         const next = [...prev];
         results.forEach((res) => {
