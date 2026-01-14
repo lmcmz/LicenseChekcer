@@ -5,6 +5,7 @@ import {
   Outlet,
   createRootRoute,
 } from '@tanstack/react-router';
+import '@/styles.css';
 import '@/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Analytics } from '@vercel/analytics/react';
@@ -57,7 +58,9 @@ function RootDocument() {
       </head>
       <body>
         <QueryClientProvider client={queryClient}>
-          <Layout />
+          <Layout>
+            <Outlet />
+          </Layout>
           <Analytics />
         </QueryClientProvider>
         <Scripts />

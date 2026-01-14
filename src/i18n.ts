@@ -283,7 +283,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: localStorage.getItem('licensechecker_lang') || 'en',
+    lng: typeof window !== 'undefined' ? localStorage.getItem('licensechecker_lang') || 'en' : 'en',
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false

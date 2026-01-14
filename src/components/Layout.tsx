@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, Outlet, useLocation } from '@tanstack/react-router';
+import { Link, useLocation } from '@tanstack/react-router';
 import {
   ShieldCheck,
   Sun,
@@ -13,10 +13,11 @@ import { useTranslation } from 'react-i18next';
 
 type Theme = 'light' | 'dark';
 
-export const Layout: React.FC = () => {
+export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return 'dark';
     const saved = localStorage.getItem('licensechecker_theme');
     return (saved as Theme) || 'dark';
   });
@@ -30,7 +31,9 @@ export const Layout: React.FC = () => {
       document.documentElement.classList.remove('dark');
       document.body.classList.remove('dark');
     }
-    localStorage.setItem('licensechecker_theme', theme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('licensechecker_theme', theme);
+    }
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -38,7 +41,9 @@ export const Layout: React.FC = () => {
   const toggleLanguage = () => {
     const newLang = i18n.language === 'en' ? 'zh' : 'en';
     i18n.changeLanguage(newLang);
-    localStorage.setItem('licensechecker_lang', newLang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('licensechecker_lang', newLang);
+    }
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -122,7 +127,7 @@ export const Layout: React.FC = () => {
       )}
 
       <main>
-        <Outlet />
+        {children}
       </main>
 
       <footer className="border-t border-slate-200 dark:border-white/10 py-12 mt-20">
