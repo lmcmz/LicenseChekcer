@@ -4,6 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "description": "License Checker - A tool to check and manage open source licenses",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lmcmz/LicenseChekcer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lmcmz/LicenseChekcer/issues"
+  },
+  "homepage": "https://github.com/lmcmz/LicenseChekcer#readme",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && tsc --noEmit",

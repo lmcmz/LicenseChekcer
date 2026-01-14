@@ -101,7 +101,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             >
               {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
             </button>
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 rounded transition-all">
+            <a href="https://github.com/lmcmz/LicenseChekcer" target="_blank" rel="noopener noreferrer" className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 rounded transition-all">
               <Github className="w-4 h-4" />
             </a>
             <button
