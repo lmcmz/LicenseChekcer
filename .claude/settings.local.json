@@ -14,7 +14,11 @@
       "WebSearch",
       "Bash(lsof:*)",
       "Bash(xargs kill:*)",
-      "mcp__chrome-devtools__click"
+      "mcp__chrome-devtools__click",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "mcp__chrome-devtools__get_network_request"
     ]
   }
 }

@@ -5,7 +5,10 @@ import { DependencyAudit, RiskLevel } from "../types";
 export const auditDependenciesWithGemini = async (dependencies: { name: string, version: string }[]): Promise<DependencyAudit[]> => {
   if (dependencies.length === 0) return [];
   
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('GEMINI_API_KEY is not set on the server');
+
+  const ai = new GoogleGenAI({ apiKey });
   const depString = dependencies.map(d => `${d.name}@${d.version}`).join(', ');
   
   const prompt = `
