@@ -23,7 +23,8 @@
       "Bash(vercel logs:*)",
       "Bash(vercel ls)",
       "Bash(vercel ls:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(grep:*)"
     ]
   }
 }
