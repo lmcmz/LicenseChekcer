@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Loader2, 
   AlertTriangle, 
@@ -8,9 +8,10 @@ import {
   RefreshCw,
   Search,
   ArrowRight,
-  ExternalLink,
   Globe,
-  Link2
+  Link2,
+  ChevronDown,
+  Github
 } from 'lucide-react';
 import { DependencyAudit, RiskLevel } from '../types';
 import { auditDependenciesWithGemini } from '../services/geminiService';
@@ -32,6 +33,13 @@ interface DependencyTask {
   error?: string;
 }
 
+const RISK_PRIORITY = {
+  [RiskLevel.HIGH]: 3,
+  [RiskLevel.CAUTION]: 2,
+  [RiskLevel.SAFE]: 1,
+  [RiskLevel.UNKNOWN]: 0
+};
+
 const AuditView: React.FC = () => {
   const [content, setContent] = useState<string>('');
   const [isAuditing, setIsAuditing] = useState(false);
@@ -42,15 +50,27 @@ const AuditView: React.FC = () => {
 
   const allDone = tasks.length > 0 && tasks.every(t => t.status === 'success' || t.status === 'error');
 
-  // Auto-switch to results view when all tasks are finished
+  // Prioritize High Risk items in the cards view as well
+  const sortedTasks = useMemo(() => {
+    return [...tasks].sort((a, b) => {
+      const scoreA = a.result ? RISK_PRIORITY[a.result.riskLevel] : -1;
+      const scoreB = b.result ? RISK_PRIORITY[b.result.riskLevel] : -1;
+      if (scoreB !== scoreA) return scoreB - scoreA;
+      return a.name.localeCompare(b.name);
+    });
+  }, [tasks]);
+
+  // Smoothly transition to results view on completion
   useEffect(() => {
     if (allDone && tasks.length > 0 && !isAuditing) {
-      const timer = setTimeout(() => setShowResults(true), 1500);
+      const timer = setTimeout(() => {
+        setShowResults(true);
+        window.scrollTo({ top: 100, behavior: 'smooth' });
+      }, 1200);
       return () => clearTimeout(timer);
     }
   }, [allDone, tasks.length, isAuditing]);
 
-  // Normalize results for common licenses and ensure repository info is preserved
   const normalizeResult = (res: DependencyAudit): DependencyAudit => {
     const lic = res.license.toUpperCase();
     const safeKeywords = ['MIT', 'ISC', 'BSD', 'APACHE', 'UNLICENSE', 'ZLIB', 'WTFPL', 'PUBLIC DOMAIN'];
@@ -64,12 +84,15 @@ const AuditView: React.FC = () => {
       finalRisk = RiskLevel.SAFE;
       finalFriendly = true;
       if (res.riskLevel !== RiskLevel.SAFE) {
-        finalReason = `[Auto Correction] ${res.license} is a standard permissive license. Original Assessment: ${res.reason}`;
+        finalReason = `[Auto-Correction] ${res.license} is a permissive and safe license. Original check suggested: ${res.reason}`;
       }
     }
 
+    const repository = res.repository || `https://www.npmjs.com/package/${res.name}`;
+
     return { 
       ...res, 
+      repository,
       riskLevel: finalRisk, 
       isFriendly: finalFriendly,
       reason: finalReason
@@ -84,7 +107,7 @@ const AuditView: React.FC = () => {
     
     const rawDeps = parseDependencies(content);
     if (rawDeps.length === 0) {
-      setError("No valid dependencies identified. We automatically skipped keys like 'name' and 'type'.");
+      setError("No dependencies identified. Please paste a valid package.json or dependency list.");
       setIsAuditing(false);
       return;
     }
@@ -99,7 +122,6 @@ const AuditView: React.FC = () => {
     const updatedTasks = [...initialTasks];
 
     rawDeps.forEach((dep, idx) => {
-      // 1. Check local static database
       const nameKey = dep.name.toLowerCase();
       const known = KNOWN_PACKAGES[nameKey];
       if (known && known.license && COMMON_LICENSES[known.license]) {
@@ -112,27 +134,22 @@ const AuditView: React.FC = () => {
           riskLevel: licInfo.risk,
           isFriendly: licInfo.friendly,
           reason: `[Internal DB] ${licInfo.reason}`,
-          sources: ['Internal Database']
+          sources: ['System Database']
         };
         updatedTasks[idx] = { ...updatedTasks[idx], status: 'success', result: normalizeResult(result) };
         return;
       }
 
-      // 2. Check local persistent cache
       const cached = getFromCache(dep.name, dep.version);
       if (cached) {
         updatedTasks[idx] = { 
           ...updatedTasks[idx], 
           status: 'success', 
-          result: normalizeResult({ 
-            ...cached, 
-            reason: cached.reason.includes('[Local Cache]') ? cached.reason : `[Local Cache] ${cached.reason}` 
-          }) 
+          result: normalizeResult(cached) 
         };
         return;
       }
 
-      // 3. Needs AI verification
       unknownQueue.push({ ...dep, index: idx });
       updatedTasks[idx].status = 'loading';
     });
@@ -145,7 +162,6 @@ const AuditView: React.FC = () => {
     }
 
     try {
-      // Single Batch Request for all unknown items
       const results = await auditDependenciesWithGemini(unknownQueue.map(q => ({ name: q.name, version: q.version })));
       
       setTasks(prev => {
@@ -154,20 +170,15 @@ const AuditView: React.FC = () => {
           const matchedItem = unknownQueue.find(q => q.name.toLowerCase() === res.name.toLowerCase());
           if (matchedItem) {
             const finalRes = normalizeResult(res);
-            // Ensure repo is not empty, fallback to npmjs if missing
-            if (!finalRes.repository) {
-                finalRes.repository = `https://www.npmjs.com/package/${finalRes.name}`;
-            }
             saveToCache(finalRes);
             next[matchedItem.index] = { ...next[matchedItem.index], status: 'success', result: finalRes };
           }
         });
         
-        // Mark lingering loading tasks as error
         next.forEach((t) => {
           if (t.status === 'loading') {
             t.status = 'error';
-            t.error = 'Timeout or missing response from AI';
+            t.error = 'No response from AI auditor';
           }
         });
         
@@ -179,7 +190,7 @@ const AuditView: React.FC = () => {
         unknownQueue.forEach(q => {
           if (next[q.index].status === 'loading') {
             next[q.index].status = 'error';
-            next[q.index].error = 'AI Request Failed';
+            next[q.index].error = 'Batch scan failed';
           }
         });
         return next;
@@ -196,16 +207,18 @@ const AuditView: React.FC = () => {
     setShowResults(false);
   };
 
+  const isGitHub = (url?: string) => url?.toLowerCase().includes('github.com');
+
   return (
     <div className="max-w-5xl mx-auto px-6 pt-16 pb-24">
       {tasks.length === 0 ? (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="text-center mb-10">
             <h1 className="text-4xl sm:text-5xl font-extrabold text-black dark:text-white tracking-tighter mb-4">
-              Audit your dependencies.
+              License Checker.
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-lg font-medium">
-              Analyze package licenses and repository sources instantly.
+              Scans package lists, verifies licenses, and flags compliance risks automatically.
             </p>
           </div>
 
@@ -216,7 +229,7 @@ const AuditView: React.FC = () => {
               </div>
               <div className="flex gap-2">
                 <button 
-                  onClick={() => setContent('{\n  "dependencies": {\n    "react": "^19.0.0",\n    "next": "latest",\n    "zod": "3.23.8",\n    "lodash": "4.17.21",\n    "sharp": "latest"\n  }\n}')}
+                  onClick={() => setContent('{\n  "dependencies": {\n    "react": "^19.0.0",\n    "next": "latest",\n    "mongoose": "latest",\n    "lodash": "4.17.21",\n    "redis": "latest"\n  }\n}')}
                   className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400"
                 >
                   Load Example
@@ -225,13 +238,13 @@ const AuditView: React.FC = () => {
             </div>
             <textarea
               className="w-full h-72 p-6 text-sm font-mono bg-transparent dark:text-slate-200 outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
-              placeholder='Paste package.json here...'
+              placeholder='Paste package.json or requirements.txt content here...'
               value={content}
               onChange={(e) => setContent(e.target.value)}
             />
             <div className="p-4 flex items-center justify-between bg-slate-50/50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5">
               <div className="text-[10px] font-medium text-slate-400 uppercase tracking-tight">
-                AI and Metadata filtering enabled
+                AI Audit Mode: Active scanning enabled
               </div>
               <button
                 onClick={runAudit}
@@ -258,29 +271,28 @@ const AuditView: React.FC = () => {
         <div className="space-y-8 animate-in fade-in duration-500">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-slate-200 dark:border-white/10">
             <div>
-              <h2 className="text-2xl font-black text-black dark:text-white tracking-tight">Audit Progress</h2>
+              <h2 className="text-2xl font-black text-black dark:text-white tracking-tight">
+                {allDone ? 'Audit Completed' : 'Scanning Dependencies...'}
+              </h2>
               <div className="flex items-center gap-4 mt-1">
                  <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                   <div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> High Risk First
+                 </div>
+                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Safe
-                 </div>
-                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                   <div className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Caution
-                 </div>
-                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                   <div className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Risk
                  </div>
               </div>
             </div>
             <div className="flex gap-2">
               <button onClick={clearResults} className="px-4 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold transition-all flex items-center gap-2">
-                <RefreshCw className="w-3.5 h-3.5" /> Start New
+                <RefreshCw className="w-3.5 h-3.5" /> Start Over
               </button>
               {allDone && (
                 <button 
                   onClick={() => setShowResults(!showResults)}
-                  className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-lg"
+                  className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg text-xs font-bold transition-all flex items-center gap-2 shadow-xl hover:scale-105"
                 >
-                  {showResults ? 'Show Task Cards' : 'View Full Report'}
+                  {showResults ? 'Show Task Queue' : 'View Detailed Report'}
                 </button>
               )}
             </div>
@@ -288,10 +300,10 @@ const AuditView: React.FC = () => {
 
           {!showResults ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {tasks.map((task, i) => (
+              {sortedTasks.map((task, i) => (
                 <div 
                   key={`${task.name}-${i}`}
-                  className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between group ${
+                  className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between group h-full ${
                     task.status === 'success' ? 'bg-white dark:bg-[#0A0A0A] border-slate-200 dark:border-white/10 shadow-sm' :
                     task.status === 'loading' ? 'bg-white dark:bg-[#0A0A0A] border-blue-500 ring-4 ring-blue-500/5' :
                     task.status === 'error' ? 'bg-rose-50/50 dark:bg-rose-900/5 border-rose-200 dark:border-rose-900/30' :
@@ -315,8 +327,10 @@ const AuditView: React.FC = () => {
                   
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between">
-                       <span className="px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 text-[9px] font-bold rounded uppercase tracking-wider">
-                        {task.result?.license || (task.status === 'loading' ? 'Auditing...' : 'Failed')}
+                       <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                         task.result?.riskLevel === RiskLevel.HIGH ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600' : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400'
+                       }`}>
+                        {task.result?.license || (task.status === 'loading' ? 'Auditing...' : 'Unknown')}
                       </span>
                       {task.result?.repository && (
                         <a 
@@ -325,12 +339,13 @@ const AuditView: React.FC = () => {
                           rel="noreferrer"
                           className="flex items-center gap-1.5 text-[9px] font-bold text-blue-500 hover:text-blue-600 transition-colors uppercase"
                         >
-                          <Link2 className="w-3 h-3" /> Source
+                          {isGitHub(task.result.repository) ? <Github className="w-3 h-3" /> : <Link2 className="w-3 h-3" />}
+                          Source
                         </a>
                       )}
                     </div>
                     {task.result?.reason && (
-                       <p className="text-[10px] text-slate-400 dark:text-slate-500 line-clamp-2 leading-relaxed">
+                       <p className="text-[10px] text-slate-400 dark:text-slate-500 line-clamp-2 leading-relaxed italic">
                          {task.result.reason}
                        </p>
                     )}
@@ -342,7 +357,9 @@ const AuditView: React.FC = () => {
             <div className="space-y-12 animate-in fade-in slide-in-from-top-4 duration-700">
               <SummaryCards audits={tasks.filter(t => t.result).map(t => t.result!)} />
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-4">
-                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Compliance Report</h3>
+                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                   Audit Results Breakdown <ChevronDown className="w-3 h-3" />
+                 </h3>
                  <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-lg">
                     <button onClick={() => setViewMode('table')} className={`px-3 py-1.5 rounded-md text-[10px] font-black uppercase transition-all flex items-center gap-2 ${viewMode === 'table' ? 'bg-white dark:bg-white/10 text-black dark:text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                       <LayoutGrid className="w-3 h-3" /> Table

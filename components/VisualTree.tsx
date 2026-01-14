@@ -6,7 +6,7 @@ import { linkHorizontal } from 'd3-shape';
 import { zoom, zoomIdentity } from 'd3-zoom';
 import { select } from 'd3-selection';
 import 'd3-transition';
-import { Info, ExternalLink, ZoomIn, ZoomOut, Maximize, MousePointer2, X, Globe } from 'lucide-react';
+import { Info, ExternalLink, ZoomIn, ZoomOut, Maximize, MousePointer2, X, Globe, Github } from 'lucide-react';
 
 interface VisualTreeProps {
   audits: DependencyAudit[];
@@ -21,16 +21,6 @@ const getRiskColor = (level: RiskLevel) => {
   }
 };
 
-const getSafeHostname = (urlString: string) => {
-  try {
-    const url = new URL(urlString);
-    return url.hostname;
-  } catch (e) {
-    return urlString;
-  }
-};
-
-// Fixed truncated component and added default export
 const VisualTree: React.FC<VisualTreeProps> = ({ audits }) => {
   const [selectedNode, setSelectedNode] = useState<DependencyAudit | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -93,6 +83,8 @@ const VisualTree: React.FC<VisualTreeProps> = ({ audits }) => {
 
   const nodes = treeLayoutData.descendants();
   const links = treeLayoutData.links();
+
+  const isGitHub = (url?: string) => url?.toLowerCase().includes('github.com');
 
   return (
     <div className="relative w-full h-[700px] bg-[#f8f9fa] dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-inner group">
@@ -198,7 +190,7 @@ const VisualTree: React.FC<VisualTreeProps> = ({ audits }) => {
           
           <div className="space-y-4">
             <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Reasoning</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Audit Reasoning</p>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 {selectedNode.reason}
               </p>
@@ -211,7 +203,8 @@ const VisualTree: React.FC<VisualTreeProps> = ({ audits }) => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-[10px] font-black text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors uppercase tracking-widest"
               >
-                <Globe className="w-3 h-3" /> View Source <ExternalLink className="w-3 h-3" />
+                {isGitHub(selectedNode.repository) ? <Github className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
+                View Source <ExternalLink className="w-3 h-3" />
               </a>
             )}
           </div>

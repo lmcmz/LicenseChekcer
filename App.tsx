@@ -23,7 +23,7 @@ const App: React.FC = () => {
   const [page, setPage] = useState<Page>('audit');
   // Load initial theme from localStorage or default to dark
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem('licenseguard_theme');
+    const saved = localStorage.getItem('licensechecker_theme');
     return (saved as Theme) || 'dark';
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,7 +36,7 @@ const App: React.FC = () => {
       document.documentElement.classList.remove('dark');
       document.body.classList.remove('dark');
     }
-    localStorage.setItem('licenseguard_theme', theme);
+    localStorage.setItem('licensechecker_theme', theme);
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -54,7 +54,7 @@ const App: React.FC = () => {
               <div className="w-6 h-6 bg-black dark:bg-white rounded flex items-center justify-center">
                 <ShieldCheck className="w-4 h-4 text-white dark:text-black" />
               </div>
-              <span className="font-bold text-sm tracking-tight uppercase">LicenseGuard</span>
+              <span className="font-bold text-sm tracking-tight uppercase">License Checker</span>
             </div>
 
             <nav className="hidden md:flex items-center gap-6">
@@ -125,7 +125,7 @@ const App: React.FC = () => {
       <footer className="border-t border-slate-200 dark:border-white/10 py-12 mt-20">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
-             © 2024 LicenseGuard — Built for compliance.
+             © 2024 License Checker — Built for compliance.
           </div>
           <div className="flex gap-6 text-xs font-medium text-slate-500">
             <button className="hover:text-black dark:hover:text-white">Privacy</button>
