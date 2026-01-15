@@ -57,6 +57,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <Link
               to="/"
               className="flex items-center gap-2 cursor-pointer"
+              onClick={() => {
+                if (window.location.pathname === '/') {
+                  window.location.reload();
+                }
+              }}
             >
               <div className="w-6 h-6 bg-black dark:bg-white rounded flex items-center justify-center">
                 <ShieldCheck className="w-4 h-4 text-white dark:text-black" />
@@ -135,10 +140,20 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <div className="flex items-center gap-2 text-slate-400 text-xs font-medium">
             © 2024 License Checker — {t('footer.built')}
           </div>
-          <div className="flex gap-6 text-xs font-medium text-slate-500">
-            <button className="hover:text-black dark:hover:text-white">{t('footer.privacy')}</button>
-            <button className="hover:text-black dark:hover:text-white">{t('footer.terms')}</button>
-            <button className="hover:text-black dark:hover:text-white">{t('footer.status')}</button>
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <span className="text-xs font-medium text-slate-500">{t('footer.moreProjects')}</span>
+            <div className="flex gap-4 text-xs font-medium text-slate-500">
+              <a href="https://outblock.io" target="_blank" rel="noopener noreferrer" className="hover:text-black dark:hover:text-white transition-colors">
+                Outblock
+              </a>
+              <a href="https://xportrait.ai" target="_blank" rel="noopener noreferrer" className="hover:text-black dark:hover:text-white transition-colors">
+                XPortrait
+              </a>
+              <a href="https://github.com/lmcmz/LicenseChekcer" target="_blank" rel="noopener noreferrer" className="hover:text-black dark:hover:text-white transition-colors flex items-center gap-1">
+                <Github className="w-3.5 h-3.5" />
+                GitHub
+              </a>
+            </div>
           </div>
         </div>
       </footer>

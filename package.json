@@ -33,6 +33,7 @@
     "d3-shape": "3.2.0",
     "d3-transition": "^3.0.1",
     "d3-zoom": "3.0.0",
+    "dotenv": "^17.2.3",
     "framer-motion": "^12.23.26",
     "i18next": "23.10.0",
     "i18next-browser-languagedetector": "7.2.0",

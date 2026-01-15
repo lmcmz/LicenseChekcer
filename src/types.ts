@@ -22,8 +22,8 @@ export interface LicenseDetail {
   id: string;
   name: string;
   permissiveness: number; // 0-100
-  description: string;
-  bestFor: string;
+  description: { en: string; zh: string };
+  bestFor: { en: string; zh: string };
   permissions: {
     commercial: boolean;
     modification: boolean;

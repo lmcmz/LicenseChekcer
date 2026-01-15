@@ -134,9 +134,7 @@ const resources = {
       },
       footer: {
         built: 'Built for compliance.',
-        privacy: 'Privacy',
-        terms: 'Terms',
-        status: 'Status'
+        moreProjects: 'More Projects'
       }
     }
   },
@@ -271,9 +269,7 @@ const resources = {
       },
       footer: {
         built: '为合规而生。',
-        privacy: '隐私政策',
-        terms: '服务条款',
-        status: '运行状态'
+        moreProjects: '更多项目'
       }
     }
   }

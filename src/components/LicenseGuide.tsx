@@ -19,7 +19,7 @@ const LicenseGuide: React.FC = () => {
   const chartData = LICENSE_DETAILS.map(l => ({
     name: l.id,
     score: l.permissiveness,
-    color: l.permissiveness > 80 ? '#10b981' : l.permissiveness > 40 ? '#f59e0b' : '#f43f5e'
+    color: l.permissiveness > 80 ? '#3b82f6' : l.permissiveness > 60 ? '#8b5cf6' : l.permissiveness > 40 ? '#ec4899' : '#ef4444'
   }));
 
   return (
@@ -58,11 +58,15 @@ const LicenseGuide: React.FC = () => {
             <div key={lic.id} className="bg-white dark:bg-[#0A0A0A] p-6 rounded-2xl border border-slate-200 dark:border-white/10 hover:border-black dark:hover:border-white/40 transition-all flex flex-col">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-black dark:text-white">{lic.name}</h3>
-                <div className={`w-2 h-2 rounded-full ${lic.permissiveness > 80 ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                <div
+                  className={`w-2 h-2 rounded-full`}
+                  style={{
+                    backgroundColor: lic.permissiveness > 80 ? '#3b82f6' : lic.permissiveness > 60 ? '#8b5cf6' : lic.permissiveness > 40 ? '#ec4899' : '#ef4444'
+                  }}
+                />
               </div>
               <p className="text-slate-500 dark:text-slate-400 text-xs mb-6 leading-relaxed flex-grow font-medium">
-                {/* Fallback to original description if needed, as database is mostly in Chinese currently */}
-                {lic.description}
+                {lic.description[i18nInstance.language as 'en' | 'zh']}
               </p>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">

@@ -24,7 +24,11 @@
       "Bash(vercel ls)",
       "Bash(vercel ls:*)",
       "Bash(curl:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm run dev:*)",
+      "Bash(kill:*)",
+      "Bash(ls:*)",
+      "Bash(pkill:*)"
     ]
   }
 }

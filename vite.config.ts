@@ -9,6 +9,7 @@ import { nitro } from 'nitro/vite';
 process.env.NITRO_PRESET = process.env.NITRO_PRESET || 'vercel';
 
 export default defineConfig({
+  envPrefix: ['VITE_', 'GEMINI_', 'SUPABASE_'],
   server: {
     port: 3000,
     host: '0.0.0.0',

@@ -81,7 +81,7 @@ const EcosystemIcon: React.FC<{ type: string; size?: string }> = ({ type, size =
 };
 
 const AuditView: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n: i18nInstance } = useTranslation();
   const [content, setContent] = useState<string>('');
   const [urlInput, setUrlInput] = useState<string>('');
   const [isFetchingUrl, setIsFetchingUrl] = useState(false);
@@ -174,7 +174,7 @@ const AuditView: React.FC = () => {
           name: dep.name, version: dep.version, license: known.license,
           repository: known.repository || `https://www.npmjs.com/package/${dep.name}`,
           riskLevel: licInfo.risk, isFriendly: licInfo.friendly,
-          reason: `[Internal DB] ${licInfo.reason}`, sources: ['System Database']
+          reason: licInfo.reason[i18nInstance.language as 'en' | 'zh'], sources: ['System Database']
         };
         updatedTasks[idx] = { ...updatedTasks[idx], status: 'success', result: normalizeResult(result) };
         return;

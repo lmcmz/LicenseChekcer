@@ -1,10 +1,24 @@
+import 'dotenv/config';
 import { defineEventHandler, readBody } from 'h3';
 import { GoogleGenAI, Type } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Lazy initialization of Supabase client
+let supabase: ReturnType<typeof createClient> | null = null;
+
+function getSupabaseClient() {
+  if (!supabase) {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_KEY || '';
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase URL and Key are required');
+    }
+
+    supabase = createClient(supabaseUrl, supabaseKey);
+  }
+  return supabase;
+}
 
 interface DependencyInput {
   name: string;
@@ -37,7 +51,7 @@ export default defineEventHandler(async (event) => {
     const uncachedDeps: DependencyInput[] = [];
 
     for (const dep of dependencies) {
-      const { data, error } = await supabase
+      const { data, error } = await getSupabaseClient()
         .from('package_licenses')
         .select('*')
         .eq('package_name', dep.name)
@@ -92,7 +106,7 @@ export default defineEventHandler(async (event) => {
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview",
+      model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
@@ -135,7 +149,7 @@ export default defineEventHandler(async (event) => {
 
     // Store results in database
     const insertPromises = audits.map(audit =>
-      supabase.from('package_licenses').insert({
+      getSupabaseClient().from('package_licenses').insert({
         package_name: audit.name,
         package_version: audit.version,
         license_name: audit.license,
