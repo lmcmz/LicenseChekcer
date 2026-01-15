@@ -169,6 +169,13 @@ export default defineEventHandler(async (event) => {
       };
     }
 
+    // Create ecosystem map for uncached deps
+    const ecosystemMap = new Map<string, string>();
+    uncachedDeps.forEach(dep => {
+      const key = `${dep.name}@${dep.version}`;
+      ecosystemMap.set(key, dep.ecosystem || 'unknown');
+    });
+
     // Query AI for uncached dependencies
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -236,8 +243,9 @@ export default defineEventHandler(async (event) => {
     }));
 
     // Store results in database
-    const insertPromises = audits.map((audit, index) => {
-      const ecosystem = uncachedDeps[index]?.ecosystem || 'unknown';
+    const insertPromises = audits.map((audit) => {
+      const key = `${audit.name}@${audit.version}`;
+      const ecosystem = ecosystemMap.get(key) || 'unknown';
       return getSupabaseClient().from('package_licenses').insert({
         ecosystem,
         package_name: audit.name,

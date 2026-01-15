@@ -19,31 +19,62 @@ const NON_DEP_KEYS = new Set([
 export const detectEcosystem = (input: string): Ecosystem => {
   const trimmed = input.trim();
 
-  // Check for specific markers
-  if (trimmed.includes('module ') && trimmed.includes('require ') && trimmed.includes('github.com/')) return 'go';
-  if (trimmed.includes('[dependencies]') || trimmed.includes('[dev-dependencies]') || trimmed.includes('[[package]]')) return 'cargo';
-  if (trimmed.includes('<dependency>') && trimmed.includes('<artifactId>')) return 'maven';
-  if (trimmed.includes('implementation') || trimmed.includes('api ')) return 'gradle';
-  if (trimmed.includes('.package(url:') || trimmed.includes('"pins"')) return 'swift';
-  if (trimmed.includes('GEM') || /^\s{4}\S+\s+\(/m.test(trimmed)) return 'ruby';
-  if (trimmed.includes('"packages"') && trimmed.includes('"name"') && trimmed.includes('"dist"')) return 'php';
+  // Check for lock file signatures first (more specific)
+  if (trimmed.includes('[[package]]') && trimmed.includes('name =') && trimmed.includes('version =')) return 'cargo'; // Cargo.lock
+  if (trimmed.startsWith('# yarn lockfile') || /^"?[^@\s"]+@[^:]*:\s*version\s+"[^"]+"/m.test(trimmed)) return 'npm'; // yarn.lock
+  if (trimmed.includes('GEM') && /^\s{4}\S+\s+\(/m.test(trimmed)) return 'ruby'; // Gemfile.lock
+
+  // Go files
+  if (trimmed.includes('module ') && trimmed.includes('require ') && /github\.com\/|golang\.org\//.test(trimmed)) return 'go';
+  if (trimmed.match(/^[^\s]+\s+v[\d.]+(?:\/go\.mod)?/m)) return 'go'; // go.sum
+
+  // Rust files
+  if (trimmed.includes('[dependencies]') || trimmed.includes('[dev-dependencies]') || trimmed.includes('[build-dependencies]')) return 'cargo'; // Cargo.toml
+
+  // Java files
+  if (trimmed.includes('<dependency>') && trimmed.includes('<artifactId>')) return 'maven'; // pom.xml
+  if (/(?:implementation|api|testImplementation)\s+['"][^'"]+['"]/.test(trimmed)) return 'gradle'; // build.gradle
+
+  // Swift files
+  if (trimmed.includes('.package(url:') || trimmed.includes('Package(')) return 'swift'; // Package.swift
 
   // Try JSON detection
   try {
     const json = JSON.parse(trimmed);
-    if (json.dependencies || json.devDependencies) return 'npm';
-    if (json.packages && Array.isArray(json.packages)) return 'php';
-    if (json.pins) return 'swift';
+
+    // PHP composer.lock
+    if (json.packages && Array.isArray(json.packages) && json.packages[0]?.name && json.packages[0]?.dist) return 'php';
+
+    // Swift Package.resolved
+    if (json.pins && Array.isArray(json.pins)) return 'swift';
+
+    // Python Pipfile.lock
     if (json.default || json._meta) return 'pip';
+
+    // NPM package-lock.json v3
+    if (json.packages && typeof json.packages === 'object' && !Array.isArray(json.packages)) return 'npm';
+
+    // NPM package-lock.json v1/v2
+    if (json.lockfileVersion && json.dependencies) return 'npm';
+
+    // NPM package.json
+    if (json.dependencies || json.devDependencies || json.peerDependencies) return 'npm';
   } catch (e) {
     // Not JSON, continue
   }
 
-  // Check line-by-line patterns
+  // Python requirements.txt - check for typical patterns
   const lines = trimmed.split('\n');
+  let pipLikeCount = 0;
   for (const line of lines) {
-    if (/^[a-zA-Z0-9\-_.[\]]+\s*[~<>=!]+/.test(line.trim())) return 'pip';
+    const l = line.trim();
+    if (l && !l.startsWith('#') && !l.startsWith('//')) {
+      if (/^[a-zA-Z0-9\-_.[\]]+\s*[~<>=!]+/.test(l)) {
+        pipLikeCount++;
+      }
+    }
   }
+  if (pipLikeCount >= 2) return 'pip'; // At least 2 lines look like pip requirements
 
   return 'unknown';
 };
