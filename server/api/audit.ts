@@ -23,6 +23,7 @@ function getSupabaseClient() {
 interface DependencyInput {
   name: string;
   version: string;
+  ecosystem?: string;
 }
 
 interface DependencyAudit {
@@ -51,9 +52,11 @@ export default defineEventHandler(async (event) => {
     const uncachedDeps: DependencyInput[] = [];
 
     for (const dep of dependencies) {
+      const ecosystem = dep.ecosystem || 'unknown';
       const { data, error } = await getSupabaseClient()
         .from('package_licenses')
         .select('*')
+        .eq('ecosystem', ecosystem)
         .eq('package_name', dep.name)
         .eq('package_version', dep.version)
         .single();
@@ -155,8 +158,10 @@ export default defineEventHandler(async (event) => {
     }));
 
     // Store results in database
-    const insertPromises = audits.map(audit =>
-      getSupabaseClient().from('package_licenses').insert({
+    const insertPromises = audits.map((audit, index) => {
+      const ecosystem = uncachedDeps[index]?.ecosystem || 'unknown';
+      return getSupabaseClient().from('package_licenses').insert({
+        ecosystem,
         package_name: audit.name,
         package_version: audit.version,
         license_name: audit.license,
@@ -167,8 +172,8 @@ export default defineEventHandler(async (event) => {
           sources: audit.sources,
           isFriendly: audit.isFriendly,
         }
-      } as any)
-    );
+      } as any);
+    });
 
     await Promise.allSettled(insertPromises);
 

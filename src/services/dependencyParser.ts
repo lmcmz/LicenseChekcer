@@ -1,7 +1,10 @@
 
+export type Ecosystem = 'npm' | 'go' | 'cargo' | 'pip' | 'maven' | 'gradle' | 'swift' | 'ruby' | 'php' | 'unknown';
+
 export interface RawDependency {
   name: string;
   version: string;
+  ecosystem?: Ecosystem;
 }
 
 const NON_DEP_KEYS = new Set([
@@ -12,9 +15,48 @@ const NON_DEP_KEYS = new Set([
   'dependenciesMeta', 'bundleDependencies', 'bundledDependencies', 'cpu', 'os'
 ]);
 
-export const parseDependencies = (input: string): RawDependency[] => {
+// Helper function to detect ecosystem from content
+export const detectEcosystem = (input: string): Ecosystem => {
+  const trimmed = input.trim();
+
+  // Check for specific markers
+  if (trimmed.includes('module ') && trimmed.includes('require ') && trimmed.includes('github.com/')) return 'go';
+  if (trimmed.includes('[dependencies]') || trimmed.includes('[dev-dependencies]') || trimmed.includes('[[package]]')) return 'cargo';
+  if (trimmed.includes('<dependency>') && trimmed.includes('<artifactId>')) return 'maven';
+  if (trimmed.includes('implementation') || trimmed.includes('api ')) return 'gradle';
+  if (trimmed.includes('.package(url:') || trimmed.includes('"pins"')) return 'swift';
+  if (trimmed.includes('GEM') || /^\s{4}\S+\s+\(/m.test(trimmed)) return 'ruby';
+  if (trimmed.includes('"packages"') && trimmed.includes('"name"') && trimmed.includes('"dist"')) return 'php';
+
+  // Try JSON detection
+  try {
+    const json = JSON.parse(trimmed);
+    if (json.dependencies || json.devDependencies) return 'npm';
+    if (json.packages && Array.isArray(json.packages)) return 'php';
+    if (json.pins) return 'swift';
+    if (json.default || json._meta) return 'pip';
+  } catch (e) {
+    // Not JSON, continue
+  }
+
+  // Check line-by-line patterns
+  const lines = trimmed.split('\n');
+  for (const line of lines) {
+    if (/^[a-zA-Z0-9\-_.[\]]+\s*[~<>=!]+/.test(line.trim())) return 'pip';
+  }
+
+  return 'unknown';
+};
+
+export const parseDependencies = (input: string, explicitEcosystem?: Ecosystem): RawDependency[] => {
   const results: RawDependency[] = [];
   const trimmedInput = input.trim();
+  const ecosystem = explicitEcosystem || detectEcosystem(trimmedInput);
+
+  // Helper to add ecosystem to dependency
+  const addDep = (name: string, version: string) => {
+    results.push({ name, version, ecosystem });
+  };
 
   // 1. Try JSON (NPM, Swift.resolved, Lock files)
   try {
@@ -27,7 +69,7 @@ export const parseDependencies = (input: string): RawDependency[] => {
       if (json[key] && typeof json[key] === 'object') {
         found = true;
         for (const [name, version] of Object.entries(json[key])) {
-          if (typeof version === 'string') results.push({ name, version });
+          if (typeof version === 'string') addDep(name, version);
         }
       }
     });
@@ -37,7 +79,7 @@ export const parseDependencies = (input: string): RawDependency[] => {
       found = true;
       Object.entries(json.dependencies).forEach(([name, data]: [string, any]) => {
         if (data.version) {
-          results.push({ name, version: data.version });
+          addDep(name, data.version);
         }
       });
     }
@@ -50,7 +92,7 @@ export const parseDependencies = (input: string): RawDependency[] => {
           // Extract package name from path like "node_modules/react"
           const name = path.replace(/^node_modules\//, '');
           if (name && !name.includes('/node_modules/')) {
-            results.push({ name, version: data.version });
+            addDep(name, data.version);
           }
         }
       });
@@ -62,7 +104,7 @@ export const parseDependencies = (input: string): RawDependency[] => {
       const packages = json.default || {};
       Object.entries(packages).forEach(([name, data]: [string, any]) => {
         if (data.version) {
-          results.push({ name, version: data.version.replace(/^==/, '') });
+          addDep(name, data.version.replace(/^==/, ''));
         }
       });
     }
@@ -72,7 +114,7 @@ export const parseDependencies = (input: string): RawDependency[] => {
       found = true;
       json.packages.forEach((pkg: any) => {
         if (pkg.name && pkg.version) {
-          results.push({ name: pkg.name, version: pkg.version });
+          addDep(pkg.name, pkg.version);
         }
       });
     }
@@ -81,10 +123,10 @@ export const parseDependencies = (input: string): RawDependency[] => {
     if (json.pins && Array.isArray(json.pins)) {
       found = true;
       json.pins.forEach((pin: any) => {
-        results.push({
-          name: pin.identity || pin.package || getBaseName(pin.location),
-          version: pin.state?.version || 'latest'
-        });
+        addDep(
+          pin.identity || pin.package || getBaseName(pin.location),
+          pin.state?.version || 'latest'
+        );
       });
     }
 
@@ -98,7 +140,7 @@ export const parseDependencies = (input: string): RawDependency[] => {
   let match;
   const yarnLockRegex = /"?([^@\s"]+)@[^:]*:\s*version\s+"([^"]+)"/g;
   while ((match = yarnLockRegex.exec(trimmedInput)) !== null) {
-    results.push({ name: match[1], version: match[2] });
+    addDep(match[1], match[2]);
   }
   if (results.length > 0) return results;
 
@@ -107,14 +149,14 @@ export const parseDependencies = (input: string): RawDependency[] => {
   // Match within [[package]] sections to avoid false matches with Cargo.toml
   const cargoLockRegex = /\[\[package\]\][\s\S]*?name\s*=\s*"([^"]+)"[\s\S]{0,200}?version\s*=\s*"([^"]+)"/g;
   while ((match = cargoLockRegex.exec(trimmedInput)) !== null) {
-    results.push({ name: match[1], version: match[2] });
+    addDep(match[1], match[2]);
   }
   if (results.length > 0) return results;
 
   // 4. Gemfile.lock (Ruby)
   const gemfileLockRegex = /^\s{4}(\S+)\s+\(([^)]+)\)/gm;
   while ((match = gemfileLockRegex.exec(trimmedInput)) !== null) {
-    results.push({ name: match[1], version: match[2] });
+    addDep(match[1], match[2]);
   }
   if (results.length > 0) return results;
 
@@ -129,7 +171,7 @@ export const parseDependencies = (input: string): RawDependency[] => {
     while ((match = goModRegex.exec(trimmedInput)) !== null) {
       // Skip if it's just "require (" without actual package
       if (!match[1].includes('(') && !match[1].includes(')')) {
-        results.push({ name: match[1], version: match[2] });
+        addDep(match[1], match[2]);
       }
     }
   } else if (!trimmedInput.startsWith('<')) {
@@ -141,7 +183,7 @@ export const parseDependencies = (input: string): RawDependency[] => {
       const key = `${match[1]}@${match[2]}`;
       if (!goSumSeen.has(key)) {
         goSumSeen.add(key);
-        results.push({ name: match[1], version: match[2] });
+        addDep(match[1], match[2]);
       }
     }
   }
@@ -159,10 +201,10 @@ export const parseDependencies = (input: string): RawDependency[] => {
 
     let depMatch;
     while ((depMatch = simpleDep.exec(sectionContent)) !== null) {
-      results.push({ name: depMatch[1], version: depMatch[2] });
+      addDep(depMatch[1], depMatch[2]);
     }
     while ((depMatch = complexDep.exec(sectionContent)) !== null) {
-      results.push({ name: depMatch[1], version: depMatch[2] });
+      addDep(depMatch[1], depMatch[2]);
     }
   }
   if (results.length > 0) return results;
@@ -171,7 +213,7 @@ export const parseDependencies = (input: string): RawDependency[] => {
   if (trimmedInput.includes('<dependency>')) {
     const mavenRegex = /<dependency>[\s\S]*?<artifactId>(.*?)<\/artifactId>[\s\S]*?<version>(.*?)<\/version>/g;
     while ((match = mavenRegex.exec(trimmedInput)) !== null) {
-      results.push({ name: match[1], version: match[2] });
+      addDep(match[1], match[2]);
     }
   }
   if (results.length > 0) return results;
@@ -179,14 +221,14 @@ export const parseDependencies = (input: string): RawDependency[] => {
   // 8. Gradle (build.gradle)
   const gradleRegex = /(?:implementation|api|testImplementation|testRuntimeOnly|runtimeOnly|compileOnly|annotationProcessor|classpath)\s+['"]([^:]+):([^:]+):([^'"]+)['"]/g;
   while ((match = gradleRegex.exec(trimmedInput)) !== null) {
-    results.push({ name: `${match[1]}:${match[2]}`, version: match[3] });
+    addDep(`${match[1]}:${match[2]}`, match[3]);
   }
   if (results.length > 0) return results;
 
   // 9. Swift (Package.swift)
   const swiftRegex = /\.package\(url:\s*["']([^"']+)["'],\s*(?:from|branch|revision):\s*["']([^"']+)["']\)/g;
   while ((match = swiftRegex.exec(trimmedInput)) !== null) {
-    results.push({ name: getBaseName(match[1]), version: match[2] });
+    addDep(getBaseName(match[1]), match[2]);
   }
   if (results.length > 0) return results;
 
@@ -203,7 +245,7 @@ export const parseDependencies = (input: string): RawDependency[] => {
       }
       const m = l.match(kvRegex);
       if (m && !NON_DEP_KEYS.has(m[1])) {
-        results.push({ name: m[1], version: m[2] });
+        addDep(m[1], m[2]);
       }
     });
   }

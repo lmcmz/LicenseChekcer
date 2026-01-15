@@ -8,7 +8,7 @@ interface ParseRequest {
 
 interface ParseResponse {
   success: boolean;
-  dependencies?: Array<{ name: string; version: string }>;
+  dependencies?: Array<{ name: string; version: string; ecosystem?: string }>;
   error?: string;
 }
 
@@ -63,6 +63,7 @@ export default defineEventHandler(async (event) => {
     const dependencies = rawDeps.map((dep: RawDependency) => ({
       name: dep.name,
       version: dep.version,
+      ecosystem: dep.ecosystem,
     }));
 
     return {
