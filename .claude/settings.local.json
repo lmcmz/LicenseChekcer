@@ -30,7 +30,9 @@
       "Bash(ls:*)",
       "Bash(pkill:*)",
       "WebFetch(domain:www.fumadocs.dev)",
-      "Bash(API_BASE_URL=http://localhost:3000/api bun test:*)"
+      "Bash(API_BASE_URL=http://localhost:3000/api bun test:*)",
+      "Bash(API_BASE_URL=http://localhost:3001/api bun test:*)",
+      "Bash(python3:*)"
     ]
   }
 }

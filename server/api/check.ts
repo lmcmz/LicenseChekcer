@@ -3,6 +3,7 @@ import { defineEventHandler, readBody, getQuery } from 'h3';
 import { GoogleGenAI, Type } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
 import { parseDependencies } from '@/services/dependencyParser';
+import { scanRepository } from '../utils/scanRepository';
 
 // Lazy initialization of Supabase client
 let supabase: ReturnType<typeof createClient> | null = null;
@@ -60,29 +61,13 @@ export default defineEventHandler(async (event) => {
 
       // If it's a GitHub repo URL (not a file), scan the repo
       if (isGithubUrl && !isRawUrl && !isFileUrl) {
-        // Scan repository using internal scan-repo logic
-        const repoMatch = url.match(/github\.com\/([^\/]+\/[^\/]+)/);
-        if (!repoMatch) {
-          return {
-            success: false,
-            error: 'Invalid GitHub repository URL',
-          };
-        }
+        // Scan repository directly
+        const scanData = await scanRepository(url);
 
-        // Call scan-repo endpoint internally
-        const host = event.node?.req?.headers?.host || 'localhost:3000';
-        const protocol = host.startsWith('localhost') ? 'http' : 'https';
-        const scanResponse = await fetch(`${protocol}://${host}/api/scan-repo`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ repoUrl: url })
-        });
-
-        const scanData = await scanResponse.json();
         if (!scanData.success || !scanData.files || scanData.files.length === 0) {
           return {
             success: false,
-            error: 'No dependency files found in repository',
+            error: scanData.error || 'No dependency files found in repository',
           };
         }
 
