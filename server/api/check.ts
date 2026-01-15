@@ -70,7 +70,9 @@ export default defineEventHandler(async (event) => {
         }
 
         // Call scan-repo endpoint internally
-        const scanResponse = await fetch(`${event.node.req.headers.host?.startsWith('localhost') ? 'http' : 'https'}://${event.node.req.headers.host}/api/scan-repo`, {
+        const host = event.node?.req?.headers?.host || 'localhost:3000';
+        const protocol = host.startsWith('localhost') ? 'http' : 'https';
+        const scanResponse = await fetch(`${protocol}://${host}/api/scan-repo`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ repoUrl: url })

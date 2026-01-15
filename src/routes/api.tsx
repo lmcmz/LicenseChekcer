@@ -11,9 +11,7 @@ function ApiDocsPage() {
     <div className="min-h-screen">
       <ApiReferenceReact
         configuration={{
-          spec: {
-            url: '/openapi.json',
-          },
+          url: '/openapi.json',
           darkMode: true,
           theme: 'purple',
           layout: 'modern',

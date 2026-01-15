@@ -53,20 +53,22 @@ export default defineEventHandler((event) => {
   const remaining = Math.max(0, MAX_REQUESTS - entry.count);
   const resetIn = Math.ceil((entry.resetAt - now) / 1000);
 
-  event.node.res.setHeader('X-RateLimit-Limit', MAX_REQUESTS.toString());
-  event.node.res.setHeader('X-RateLimit-Remaining', remaining.toString());
-  event.node.res.setHeader('X-RateLimit-Reset', Math.ceil(entry.resetAt / 1000).toString());
+  if (event.node?.res) {
+    event.node.res.setHeader('X-RateLimit-Limit', MAX_REQUESTS.toString());
+    event.node.res.setHeader('X-RateLimit-Remaining', remaining.toString());
+    event.node.res.setHeader('X-RateLimit-Reset', Math.ceil(entry.resetAt / 1000).toString());
 
-  // Check if rate limit exceeded
-  if (entry.count > MAX_REQUESTS) {
-    event.node.res.setHeader('Retry-After', resetIn.toString());
-    event.node.res.statusCode = 429;
-    event.node.res.end(
-      JSON.stringify({
-        success: false,
-        error: `Rate limit exceeded. Please try again in ${resetIn} seconds.`,
-      })
-    );
-    return;
+    // Check if rate limit exceeded
+    if (entry.count > MAX_REQUESTS) {
+      event.node.res.setHeader('Retry-After', resetIn.toString());
+      event.node.res.statusCode = 429;
+      event.node.res.end(
+        JSON.stringify({
+          success: false,
+          error: `Rate limit exceeded. Please try again in ${resetIn} seconds.`,
+        })
+      );
+      return;
+    }
   }
 });
