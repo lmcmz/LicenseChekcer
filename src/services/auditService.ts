@@ -15,7 +15,7 @@ export const auditDependenciesWithBackend = async (
   if (dependencies.length === 0) return [];
 
   try {
-    const response = await fetch('/api/audit-licenses', {
+    const response = await fetch('/api/audit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
