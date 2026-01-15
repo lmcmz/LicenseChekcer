@@ -60,15 +60,16 @@ export default defineEventHandler(async (event) => {
 
       if (data && !error) {
         // Found in cache
+        const record = data as any;
         cachedResults.push({
-          name: data.package_name,
-          version: data.package_version,
-          license: data.license_name,
-          repository: data.metadata?.repository,
-          riskLevel: data.risk_level as 'Safe' | 'Caution' | 'High Risk',
-          reason: data.metadata?.reason,
-          isFriendly: data.risk_level === 'Safe',
-          sources: data.metadata?.sources || [],
+          name: record.package_name,
+          version: record.package_version,
+          license: record.license_name,
+          repository: record.metadata?.repository,
+          riskLevel: record.risk_level as 'Safe' | 'Caution' | 'High Risk',
+          reason: record.metadata?.reason,
+          isFriendly: record.risk_level === 'Safe',
+          sources: record.metadata?.sources || [],
         });
       } else {
         // Not in cache

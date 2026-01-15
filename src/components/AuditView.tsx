@@ -86,6 +86,7 @@ const AuditView: React.FC = () => {
   const [content, setContent] = useState<string>('');
   const [urlInput, setUrlInput] = useState<string>('');
   const [isFetchingUrl, setIsFetchingUrl] = useState(false);
+  const [isScanningRepo, setIsScanningRepo] = useState(false);
   const [isAuditing, setIsAuditing] = useState(false);
   const [tasks, setTasks] = useState<DependencyTask[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
@@ -93,6 +94,7 @@ const AuditView: React.FC = () => {
   const [showResults, setShowResults] = useState(false);
   const [showFormats, setShowFormats] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [foundFiles, setFoundFiles] = useState<Array<{name: string; content: string; type: string}>>([]);
 
   const allDone = tasks.length > 0 && tasks.every(t => t.status === 'success' || t.status === 'error');
 
@@ -132,6 +134,37 @@ const AuditView: React.FC = () => {
       setError(`Failed to fetch URL: ${err.message}`);
     } finally {
       setIsFetchingUrl(false);
+    }
+  };
+
+  const handleScanRepo = async () => {
+    if (!urlInput.trim()) return;
+    setIsScanningRepo(true);
+    setError(null);
+    setFoundFiles([]);
+    try {
+      const response = await fetch('/api/scan-repo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repoUrl: urlInput.trim() })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        setError(data.error || 'Failed to scan repository');
+        return;
+      }
+
+      if (data.files && data.files.length > 0) {
+        setFoundFiles(data.files);
+        // Automatically use the first file found
+        setContent(data.files[0].content);
+      }
+    } catch (err: any) {
+      setError(`Failed to scan repository: ${err.message}`);
+    } finally {
+      setIsScanningRepo(false);
     }
   };
 
@@ -295,6 +328,14 @@ const AuditView: React.FC = () => {
                    </button>
                 )}
                 <button
+                  onClick={handleScanRepo}
+                  disabled={isScanningRepo || !urlInput}
+                  className="px-3 py-1.5 bg-blue-500 dark:bg-blue-600 text-white rounded-xl text-xs font-bold disabled:opacity-50 transition-all active:scale-95 hover:bg-blue-600 dark:hover:bg-blue-700 flex items-center gap-1.5"
+                  title="Scan GitHub repository for dependency files"
+                >
+                  {isScanningRepo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Search className="w-3.5 h-3.5" />Scan</>}
+                </button>
+                <button
                   onClick={handleFetchUrl}
                   disabled={isFetchingUrl || !urlInput}
                   className="px-4 py-1.5 bg-black dark:bg-white text-white dark:text-black rounded-xl text-xs font-bold disabled:opacity-50 transition-all active:scale-95"
@@ -324,15 +365,31 @@ const AuditView: React.FC = () => {
                   </div>
                 </div>
               )}
-              <div className="p-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                  <Search className="w-3.5 h-3.5" /> {t('audit.inputLabel')}
+              <div className="p-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    <Search className="w-3.5 h-3.5" /> {t('audit.inputLabel')}
+                  </div>
+                  <div className="flex gap-4">
+                    <button onClick={() => setContent('module github.com/user/project\n\ngo 1.18\n\nrequire (\n  github.com/gin-gonic/gin v1.8.1\n  github.com/sirupsen/logrus v1.9.0\n)')} className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400">Go Mod</button>
+                    <button onClick={() => setContent('[dependencies]\nserde = "1.0"\ntokio = { version = "1.0", features = ["full"] }')} className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400">Cargo</button>
+                    <button onClick={() => setContent('{\n  "dependencies": {\n    "react": "^19.0.0",\n    "next": "latest"\n  }\n}')} className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400">NPM</button>
+                  </div>
                 </div>
-                <div className="flex gap-4">
-                  <button onClick={() => setContent('module github.com/user/project\n\ngo 1.18\n\nrequire (\n  github.com/gin-gonic/gin v1.8.1\n  github.com/sirupsen/logrus v1.9.0\n)')} className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400">Go Mod</button>
-                  <button onClick={() => setContent('[dependencies]\nserde = "1.0"\ntokio = { version = "1.0", features = ["full"] }')} className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400">Cargo</button>
-                  <button onClick={() => setContent('{\n  "dependencies": {\n    "react": "^19.0.0",\n    "next": "latest"\n  }\n}')} className="text-[10px] font-bold text-blue-500 hover:text-blue-600 dark:text-blue-400">NPM</button>
-                </div>
+                {foundFiles.length > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Found Files:</span>
+                    {foundFiles.map((file, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setContent(file.content)}
+                        className="px-2 py-1 text-[10px] font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                      >
+                        {file.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <textarea
                 className="w-full h-72 p-6 text-sm font-mono bg-transparent dark:text-slate-200 outline-none resize-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
