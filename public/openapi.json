@@ -1,0 +1,436 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "License Checker API",
+    "version": "1.0.0",
+    "description": "API for auditing open source license compliance\n\n## Rate Limits\n\n- 20 requests per minute per IP address\n- Rate limit headers: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`\n- Exceeded: `429 Too Many Requests` with `Retry-After` header",
+    "contact": {
+      "name": "Outblock",
+      "url": "https://outblock.io"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://licensechecker.xyz/api",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/check": {
+      "get": {
+        "summary": "Check from URL",
+        "description": "Parse and audit from URL. Supports:\n- GitHub repository URLs (scans for dependency files)\n- Direct file URLs (package.json, requirements.txt, etc.)\n- GitHub blob URLs (automatically converted to raw URLs)",
+        "operationId": "checkFromUrl",
+        "tags": ["Core"],
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "description": "GitHub repo URL or file URL",
+            "schema": {
+              "type": "string",
+              "format": "uri"
+            },
+            "examples": {
+              "repoUrl": {
+                "summary": "Repository URL",
+                "value": "https://github.com/facebook/react"
+              },
+              "fileUrl": {
+                "summary": "File URL",
+                "value": "https://raw.githubusercontent.com/facebook/react/main/package.json"
+              },
+              "blobUrl": {
+                "summary": "GitHub blob URL",
+                "value": "https://github.com/facebook/react/blob/main/package.json"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "License audit results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Check from content",
+        "description": "Parse and audit from raw file content",
+        "operationId": "checkFromContent",
+        "tags": ["Core"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentRequest"
+              },
+              "example": {
+                "content": "{\n  \"dependencies\": {\n    \"react\": \"^18.2.0\",\n    \"vue\": \"^3.3.4\"\n  }\n}"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "License audit results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit": {
+      "post": {
+        "summary": "Audit dependencies",
+        "description": "Audit license compliance for dependencies",
+        "operationId": "audit",
+        "tags": ["Core"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditRequest"
+              },
+              "example": {
+                "dependencies": [
+                  {
+                    "name": "react",
+                    "version": "18.2.0"
+                  },
+                  {
+                    "name": "vue",
+                    "version": "3.3.4"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "License audit results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditResponse"
+                },
+                "example": {
+                  "success": true,
+                  "data": [
+                    {
+                      "name": "react",
+                      "version": "18.2.0",
+                      "license": "MIT",
+                      "repository": "https://github.com/facebook/react",
+                      "riskLevel": "Safe",
+                      "reason": "MIT is a permissive license",
+                      "isFriendly": true,
+                      "sources": ["https://github.com/facebook/react/blob/main/LICENSE"]
+                    }
+                  ],
+                  "cached": false,
+                  "cachedCount": 0,
+                  "newCount": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/parse": {
+      "get": {
+        "summary": "Parse from URL",
+        "description": "Extract dependencies from file URL",
+        "operationId": "parseFromUrl",
+        "tags": ["Helpers"],
+        "parameters": [
+          {
+            "name": "url",
+            "in": "query",
+            "required": true,
+            "description": "URL to dependency file",
+            "schema": {
+              "type": "string",
+              "format": "uri",
+              "example": "https://raw.githubusercontent.com/facebook/react/main/package.json"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Parsed dependencies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseResponse"
+                },
+                "example": {
+                  "success": true,
+                  "dependencies": [
+                    {
+                      "name": "react",
+                      "version": "18.2.0"
+                    },
+                    {
+                      "name": "vue",
+                      "version": "3.3.4"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Parse from content",
+        "description": "Extract dependencies from raw file content",
+        "operationId": "parseFromContent",
+        "tags": ["Helpers"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentRequest"
+              },
+              "example": {
+                "content": "{\n  \"dependencies\": {\n    \"react\": \"^18.2.0\",\n    \"vue\": \"^3.3.4\"\n  }\n}"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Parsed dependencies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParseResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scan-repo": {
+      "post": {
+        "summary": "Scan GitHub repository",
+        "description": "Scan a GitHub repository for dependency files",
+        "operationId": "scanRepository",
+        "tags": ["Helpers"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanRepoRequest"
+              },
+              "example": {
+                "repoUrl": "https://github.com/facebook/react"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully scanned repository",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanRepoResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ContentRequest": {
+        "type": "object",
+        "required": ["content"],
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "Raw file content (package.json, requirements.txt, etc.)"
+          }
+        }
+      },
+      "Dependency": {
+        "type": "object",
+        "required": ["name", "version"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "react"
+          },
+          "version": {
+            "type": "string",
+            "example": "18.2.0"
+          }
+        }
+      },
+      "ParseResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Dependency"
+            }
+          }
+        }
+      },
+      "AuditRequest": {
+        "type": "object",
+        "required": ["dependencies"],
+        "properties": {
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Dependency"
+            }
+          }
+        }
+      },
+      "AuditResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DependencyAudit"
+            }
+          },
+          "cached": {
+            "type": "boolean"
+          },
+          "cachedCount": {
+            "type": "integer"
+          },
+          "newCount": {
+            "type": "integer"
+          }
+        }
+      },
+      "DependencyAudit": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string",
+            "example": "MIT"
+          },
+          "repository": {
+            "type": "string",
+            "format": "uri"
+          },
+          "riskLevel": {
+            "type": "string",
+            "enum": ["Safe", "Caution", "High Risk"]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "isFriendly": {
+            "type": "boolean"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          }
+        }
+      },
+      "ScanRepoRequest": {
+        "type": "object",
+        "required": ["repoUrl"],
+        "properties": {
+          "repoUrl": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://github.com/facebook/react"
+          }
+        }
+      },
+      "ScanRepoResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "repository": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Core",
+      "description": "Main endpoints"
+    },
+    {
+      "name": "Helpers",
+      "description": "Helper utilities"
+    }
+  ]
+}

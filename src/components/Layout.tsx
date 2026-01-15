@@ -85,6 +85,12 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               >
                 {t('nav.selector')}
               </Link>
+              <Link
+                to="/api"
+                className={`text-xs font-medium transition-colors ${isActive('/api') ? 'text-black dark:text-white' : 'text-slate-500 hover:text-black dark:hover:text-white'}`}
+              >
+                {t('nav.api')}
+              </Link>
             </nav>
           </div>
 

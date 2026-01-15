@@ -1,7 +1,8 @@
 import 'dotenv/config';
-import { defineEventHandler, readBody } from 'h3';
+import { defineEventHandler, readBody, getQuery } from 'h3';
 import { GoogleGenAI, Type } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
+import { parseDependencies } from '@/services/dependencyParser';
 
 // Lazy initialization of Supabase client
 let supabase: ReturnType<typeof createClient> | null = null;
@@ -38,13 +39,102 @@ interface DependencyAudit {
 
 export default defineEventHandler(async (event) => {
   try {
-    const body = await readBody<{ dependencies: DependencyInput[] }>(event);
+    let content = '';
 
-    if (!body || !body.dependencies || body.dependencies.length === 0) {
-      return { success: true, data: [] };
+    // Handle GET request (URL parameter)
+    if (event.method === 'GET') {
+      const query = getQuery(event);
+      const url = query.url as string;
+
+      if (!url) {
+        return {
+          success: false,
+          error: 'Missing required parameter: url',
+        };
+      }
+
+      // Smart URL handling - detect if it's a repo or file URL
+      const isGithubUrl = url.includes('github.com');
+      const isRawUrl = url.includes('raw.githubusercontent.com') || url.includes('/raw/');
+      const isFileUrl = url.includes('/blob/');
+
+      // If it's a GitHub repo URL (not a file), scan the repo
+      if (isGithubUrl && !isRawUrl && !isFileUrl) {
+        // Scan repository using internal scan-repo logic
+        const repoMatch = url.match(/github\.com\/([^\/]+\/[^\/]+)/);
+        if (!repoMatch) {
+          return {
+            success: false,
+            error: 'Invalid GitHub repository URL',
+          };
+        }
+
+        // Call scan-repo endpoint internally
+        const scanResponse = await fetch(`${event.node.req.headers.host?.startsWith('localhost') ? 'http' : 'https'}://${event.node.req.headers.host}/api/scan-repo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ repoUrl: url })
+        });
+
+        const scanData = await scanResponse.json();
+        if (!scanData.success || !scanData.files || scanData.files.length === 0) {
+          return {
+            success: false,
+            error: 'No dependency files found in repository',
+          };
+        }
+
+        // Use the first file found
+        content = scanData.files[0].content;
+      } else {
+        // It's a file URL - fetch directly
+        let targetUrl = url;
+
+        // Convert GitHub blob URLs to raw URLs
+        if (isGithubUrl && !isRawUrl) {
+          targetUrl = targetUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+        }
+
+        const response = await fetch(targetUrl);
+        if (!response.ok) {
+          return {
+            success: false,
+            error: `Failed to fetch URL: ${response.statusText}`,
+          };
+        }
+
+        content = await response.text();
+      }
+    }
+    // Handle POST request (file content in body)
+    else if (event.method === 'POST') {
+      const body = await readBody<{ content?: string }>(event);
+
+      if (!body || !body.content) {
+        return {
+          success: false,
+          error: 'Missing required field: content',
+        };
+      }
+
+      content = body.content;
+    } else {
+      return {
+        success: false,
+        error: 'Method not allowed. Use GET or POST.',
+      };
     }
 
-    const { dependencies } = body;
+    // Parse dependencies from content
+    const rawDeps = parseDependencies(content);
+    const dependencies: DependencyInput[] = rawDeps.map(dep => ({
+      name: dep.name,
+      version: dep.version,
+    }));
+
+    if (dependencies.length === 0) {
+      return { success: true, data: [] };
+    }
 
     // Check cache first
     const cachedResults: DependencyAudit[] = [];
@@ -79,7 +169,13 @@ export default defineEventHandler(async (event) => {
 
     // If all results are cached, return them
     if (uncachedDeps.length === 0) {
-      return { success: true, data: cachedResults, cached: true };
+      return {
+        success: true,
+        data: cachedResults,
+        cached: true,
+        cachedCount: cachedResults.length,
+        newCount: 0
+      };
     }
 
     // Query AI for uncached dependencies
@@ -177,10 +273,10 @@ export default defineEventHandler(async (event) => {
       newCount: audits.length
     };
   } catch (error: any) {
-    console.error('Audit error:', error);
+    console.error('Check error:', error);
     return {
       success: false,
-      error: error.message || 'Failed to audit dependencies'
+      error: error.message || 'Failed to check dependencies'
     };
   }
 });

@@ -1,136 +1,62 @@
 # License Checker
 
-A modern tool to check and manage open source licenses for your dependencies.
+A modern tool to check and audit open source licenses for your dependencies.
 
-## Architecture
-
-This project is built with:
-- **TanStack Start** - Full-stack React framework with routing
-- **Vite** - Fast build tool and dev server
-- **Supabase** - PostgreSQL database and authentication
-- **Bun** - Fast JavaScript runtime and package manager
-- **Vercel** - Deployment platform
-- **Gemini AI** - License analysis with web search capabilities
-- **Vercel Analytics** - Performance monitoring
+🌐 **[Live Demo](https://licensechecker.xyz)** • 📚 **[API Docs](https://licensechecker.xyz/api)** • 🐛 **[Issues](https://github.com/lmcmz/LicenseChekcer/issues)**
 
 ## Features
 
-- 📦 Multi-language dependency support (npm, Python, Go, Rust, Maven, Gradle, Swift)
-- 🔍 AI-powered license analysis with web search
-- 💾 Database caching for faster repeated queries
-- 🎨 Modern UI with dark mode support
+- 🤖 AI-powered license analysis with web search
+- 📦 Multi-language support (Node.js, Python, Go, Rust, Java, Swift, Ruby, PHP)
+- 💾 Smart caching for faster queries
+- 🎨 Modern UI with dark mode
 - 🌐 Internationalization (English & Chinese)
-- 📊 Visual dependency tree and table views
-- 🔒 Secure API key management (backend-only)
+- 🔒 Secure backend API
 
-## Project Structure
-
-```
-.
-├── api/                    # Backend API routes (Nitro)
-│   └── audit-licenses.ts   # License audit endpoint
-├── src/
-│   ├── routes/             # TanStack Router pages
-│   │   ├── __root.tsx      # Root layout
-│   │   ├── index.tsx       # Home/Audit page
-│   │   ├── guide.tsx       # License guide page
-│   │   └── selector.tsx    # License selector page
-│   ├── components/         # React components
-│   ├── services/           # Business logic
-│   ├── lib/                # Utilities
-│   ├── i18n.ts             # Internationalization
-│   └── styles.css          # Global styles
-├── supabase/
-│   └── schema.sql          # Database schema
-├── package.json
-├── vite.config.ts
-├── vercel.json
-└── .env.example
-```
-
-## Setup
-
-### 1. Install Dependencies
+## Quick Start
 
 ```bash
+# Install dependencies
 bun install
-```
 
-### 2. Configure Environment Variables
-
-Copy `.env.example` to `.env` and fill in your credentials:
-
-```bash
+# Set up environment variables
 cp .env.example .env
-```
 
-Required environment variables:
-- `GEMINI_API_KEY` - Your Google Gemini API key (server-side only)
-- `VITE_SUPABASE_URL` - Your Supabase project URL
-- `VITE_SUPABASE_ANON_KEY` - Your Supabase anonymous key
-- `SUPABASE_SERVICE_KEY` - Your Supabase service role key (server-side only)
-
-### 3. Set Up Supabase Database
-
-Run the schema file in your Supabase SQL editor:
-
-```bash
-# Or use Supabase CLI
-supabase db push
-```
-
-The schema creates:
-- `package_licenses` table for caching license information
-- Indexes for fast lookups
-- Row Level Security policies
-
-### 4. Development
-
-Start the development server:
-
-```bash
+# Start development server
 bun run dev
 ```
 
-The app will be available at `http://localhost:3000`
+Visit `http://localhost:3000`
 
-### 5. Build
-
-Build for production:
+## API Usage
 
 ```bash
-bun run build
+# Check from GitHub repo URL
+curl "https://licensechecker.xyz/api/check?url=https://github.com/facebook/react"
+
+# Check from file content
+curl -X POST https://licensechecker.xyz/api/check \
+  -H "Content-Type: application/json" \
+  -d '{"content": "..."}'
+
+# Audit parsed dependencies
+curl -X POST https://licensechecker.xyz/api/audit \
+  -H "Content-Type: application/json" \
+  -d '{"dependencies": [{"name": "react", "version": "18.2.0"}]}'
 ```
 
-## Deployment
+See [API Documentation](./API_EXAMPLES.md) for more details.
 
-This project is optimized for Vercel deployment:
+## Documentation
 
-1. Connect your repository to Vercel
-2. Add environment variables in Vercel dashboard
-3. Deploy
+- [Architecture](./docs/architecture.md) - Technical architecture and stack
+- [Setup Guide](./docs/setup.md) - Detailed setup instructions
+- [Deployment](./docs/deployment.md) - Deployment guide
+- [API Reference](./API_EXAMPLES.md) - Complete API documentation
 
-Vercel will automatically:
-- Build the project with Bun
-- Deploy API routes as serverless functions
-- Set up analytics
+## Tech Stack
 
-## How It Works
-
-1. **User Input**: Users paste their dependency file (package.json, requirements.txt, etc.)
-2. **Parsing**: Dependencies are extracted and normalized
-3. **Cache Check**: System checks Supabase database for cached results
-4. **AI Analysis**: Uncached dependencies are sent to backend API
-5. **Gemini Query**: Backend calls Gemini AI with web search enabled
-6. **Storage**: Results are stored in Supabase for future queries
-7. **Display**: Results are shown with risk levels and recommendations
-
-## Security
-
-- ✅ API keys are stored server-side only
-- ✅ Frontend never accesses Gemini directly
-- ✅ Supabase RLS policies protect data
-- ✅ HTTPS enforced in production
+TanStack Router • Vite • Supabase • Gemini AI • Vercel
 
 ## License
 

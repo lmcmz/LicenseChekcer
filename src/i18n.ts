@@ -9,6 +9,7 @@ const resources = {
         auditor: 'Auditor',
         guide: 'Handbook',
         selector: 'Selector',
+        api: 'API',
         lang: 'ZH'
       },
       audit: {
@@ -144,6 +145,7 @@ const resources = {
         auditor: '审计器',
         guide: '协议指南',
         selector: '选择器',
+        api: 'API',
         lang: 'EN'
       },
       audit: {
