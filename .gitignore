@@ -24,3 +24,8 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Supabase local files
+supabase/.temp/
+supabase/.branches/
+/src/services/__tests__/fixtures/swift/.build
