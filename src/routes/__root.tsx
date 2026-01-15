@@ -33,11 +33,36 @@ export const Route = createRootRoute({
           content: 'width=device-width, initial-scale=1',
         },
         {
-          title: 'License Checker - Audit Open Source Dependencies',
+          title: 'License Checker - Audit Open Source Dependencies | Free Compliance Tool',
         },
         {
           name: 'description',
-          content: 'A tool to check and manage open source licenses for your dependencies',
+          content: 'Free open source license compliance tool. Scan dependencies, verify licenses, and flag risks automatically. Supports npm, Python, Go, Rust, Maven, and more.',
+        },
+        {
+          name: 'keywords',
+          content: 'license checker, open source compliance, dependency audit, license audit, MIT license, Apache license, GPL license, software compliance, npm audit, package audit',
+        },
+        {
+          name: 'author',
+          content: 'Outblock',
+        },
+        {
+          name: 'robots',
+          content: 'index, follow',
+        },
+        {
+          name: 'googlebot',
+          content: 'index, follow',
+        },
+        // Open Graph tags
+        {
+          property: 'og:type',
+          content: 'website',
+        },
+        {
+          property: 'og:site_name',
+          content: 'License Checker',
         },
         {
           property: 'og:title',
@@ -45,18 +70,84 @@ export const Route = createRootRoute({
         },
         {
           property: 'og:description',
-          content: 'Smart license compliance tool that scans dependencies and flags risks automatically',
+          content: 'Smart license compliance tool that scans dependencies and flags risks automatically. Supports multiple languages and package managers.',
         },
         {
           property: 'og:image',
           content: '/logo.svg',
+        },
+        {
+          property: 'og:image:alt',
+          content: 'License Checker Logo',
+        },
+        {
+          property: 'og:url',
+          content: 'https://licensechecker.xyz',
+        },
+        // Twitter Card tags
+        {
+          name: 'twitter:card',
+          content: 'summary_large_image',
+        },
+        {
+          name: 'twitter:title',
+          content: 'License Checker - Audit Open Source Dependencies',
+        },
+        {
+          name: 'twitter:description',
+          content: 'Smart license compliance tool that scans dependencies and flags risks automatically.',
+        },
+        {
+          name: 'twitter:image',
+          content: '/logo.svg',
+        },
+        // Additional meta tags
+        {
+          name: 'theme-color',
+          content: '#000000',
+        },
+        {
+          name: 'application-name',
+          content: 'License Checker',
         },
       ],
       links: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'apple-touch-icon', href: '/logo.svg' },
         { rel: 'manifest', href: '/manifest.json' },
+        { rel: 'canonical', href: 'https://licensechecker.xyz' },
         { rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css' },
+      ],
+      scripts: [
+        {
+          type: 'application/ld+json',
+          children: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebApplication',
+            name: 'License Checker',
+            applicationCategory: 'DeveloperApplication',
+            operatingSystem: 'Web',
+            description: 'Free open source license compliance tool. Scan dependencies, verify licenses, and flag risks automatically.',
+            url: 'https://licensechecker.xyz',
+            author: {
+              '@type': 'Organization',
+              name: 'Outblock',
+              url: 'https://outblock.io',
+            },
+            offers: {
+              '@type': 'Offer',
+              price: '0',
+              priceCurrency: 'USD',
+            },
+            featureList: [
+              'Dependency scanning',
+              'License verification',
+              'Risk assessment',
+              'Multiple language support',
+              'GitHub repository scanning',
+            ],
+          }),
+        },
       ],
     };
   },

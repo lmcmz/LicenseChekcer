@@ -1,0 +1,9 @@
+# robots.txt for License Checker
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://licensechecker.xyz/sitemap.xml
+
+# Crawl-delay (optional, helps prevent overwhelming the server)
+Crawl-delay: 1
