@@ -28,5 +28,9 @@
     "noEmit": true,
     "strict": true,
     "resolveJsonModule": true
-  }
+  },
+  "exclude": [
+    "**/*.test.ts",
+    "**/__tests__/**"
+  ]
 }

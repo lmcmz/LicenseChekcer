@@ -161,7 +161,7 @@ export default defineEventHandler(async (event) => {
           sources: audit.sources,
           isFriendly: audit.isFriendly,
         }
-      })
+      } as any)
     );
 
     await Promise.allSettled(insertPromises);
