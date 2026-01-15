@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from '@tanstack/react-router';
 import {
-  ShieldCheck,
   Sun,
   Moon,
   Github,
@@ -63,9 +62,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 }
               }}
             >
-              <div className="w-6 h-6 bg-black dark:bg-white rounded flex items-center justify-center">
-                <ShieldCheck className="w-4 h-4 text-white dark:text-black" />
-              </div>
+              <img src="/logo.svg" alt="License Checker" className="w-7 h-7" />
               <span className="font-bold text-sm tracking-tight uppercase">License Checker</span>
             </Link>
 

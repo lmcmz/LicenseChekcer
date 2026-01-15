@@ -85,8 +85,7 @@ const AuditView: React.FC = () => {
   const { t, i18n: i18nInstance } = useTranslation();
   const [content, setContent] = useState<string>('');
   const [urlInput, setUrlInput] = useState<string>('');
-  const [isFetchingUrl, setIsFetchingUrl] = useState(false);
-  const [isScanningRepo, setIsScanningRepo] = useState(false);
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const [isAuditing, setIsAuditing] = useState(false);
   const [tasks, setTasks] = useState<DependencyTask[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
@@ -117,54 +116,58 @@ const AuditView: React.FC = () => {
     }
   }, [allDone, tasks.length, isAuditing]);
 
-  const handleFetchUrl = async () => {
+  const handleSmartLoad = async () => {
     if (!urlInput.trim()) return;
-    setIsFetchingUrl(true);
-    setError(null);
-    try {
-      let targetUrl = urlInput.trim();
-      if (targetUrl.includes('github.com') && !targetUrl.includes('raw.githubusercontent.com') && !targetUrl.includes('/raw/')) {
-        targetUrl = targetUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-      }
-      const response = await fetch(targetUrl);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const text = await response.text();
-      setContent(text);
-    } catch (err: any) {
-      setError(`Failed to fetch URL: ${err.message}`);
-    } finally {
-      setIsFetchingUrl(false);
-    }
-  };
-
-  const handleScanRepo = async () => {
-    if (!urlInput.trim()) return;
-    setIsScanningRepo(true);
+    setIsLoadingUrl(true);
     setError(null);
     setFoundFiles([]);
+
     try {
-      const response = await fetch('/api/scan-repo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repoUrl: urlInput.trim() })
-      });
+      const url = urlInput.trim();
 
-      const data = await response.json();
+      // Check if it's a GitHub URL
+      const isGithubUrl = url.includes('github.com');
+      const isRawUrl = url.includes('raw.githubusercontent.com') || url.includes('/raw/');
+      const isFileUrl = url.includes('/blob/');
 
-      if (!data.success) {
-        setError(data.error || 'Failed to scan repository');
-        return;
-      }
+      // If it's a GitHub repo URL (not pointing to a specific file), scan for dependency files
+      if (isGithubUrl && !isRawUrl && !isFileUrl) {
+        // Scan repository for dependency files
+        const response = await fetch('/api/scan-repo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ repoUrl: url })
+        });
 
-      if (data.files && data.files.length > 0) {
-        setFoundFiles(data.files);
-        // Automatically use the first file found
-        setContent(data.files[0].content);
+        const data = await response.json();
+
+        if (!data.success) {
+          setError(data.error || 'Failed to scan repository');
+          return;
+        }
+
+        if (data.files && data.files.length > 0) {
+          setFoundFiles(data.files);
+          setContent(data.files[0].content);
+        }
+      } else {
+        // Fetch the file directly
+        let targetUrl = url;
+
+        // Convert GitHub file URL to raw URL if needed
+        if (isGithubUrl && !isRawUrl) {
+          targetUrl = targetUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+        }
+
+        const response = await fetch(targetUrl);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const text = await response.text();
+        setContent(text);
       }
     } catch (err: any) {
-      setError(`Failed to scan repository: ${err.message}`);
+      setError(`Failed to load: ${err.message}`);
     } finally {
-      setIsScanningRepo(false);
+      setIsLoadingUrl(false);
     }
   };
 
@@ -317,7 +320,7 @@ const AuditView: React.FC = () => {
                 type="text"
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleFetchUrl()}
+                onKeyDown={(e) => e.key === 'Enter' && handleSmartLoad()}
                 placeholder={t('audit.urlPlaceholder')}
                 className="block w-full pl-10 pr-24 py-3 bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/10 rounded-2xl text-sm outline-none focus:border-black dark:focus:border-white/30 transition-all placeholder:text-slate-400 font-medium"
               />
@@ -328,19 +331,12 @@ const AuditView: React.FC = () => {
                    </button>
                 )}
                 <button
-                  onClick={handleScanRepo}
-                  disabled={isScanningRepo || !urlInput}
-                  className="px-3 py-1.5 bg-blue-500 dark:bg-blue-600 text-white rounded-xl text-xs font-bold disabled:opacity-50 transition-all active:scale-95 hover:bg-blue-600 dark:hover:bg-blue-700 flex items-center gap-1.5"
-                  title="Scan GitHub repository for dependency files"
+                  onClick={handleSmartLoad}
+                  disabled={isLoadingUrl || !urlInput}
+                  className="px-4 py-1.5 bg-black dark:bg-white text-white dark:text-black rounded-xl text-xs font-bold disabled:opacity-50 transition-all active:scale-95 hover:bg-slate-800 dark:hover:bg-slate-200"
+                  title="Smart load: scans GitHub repos or fetches file URLs"
                 >
-                  {isScanningRepo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Search className="w-3.5 h-3.5" />Scan</>}
-                </button>
-                <button
-                  onClick={handleFetchUrl}
-                  disabled={isFetchingUrl || !urlInput}
-                  className="px-4 py-1.5 bg-black dark:bg-white text-white dark:text-black rounded-xl text-xs font-bold disabled:opacity-50 transition-all active:scale-95"
-                >
-                  {isFetchingUrl ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : t('audit.fetchBtn')}
+                  {isLoadingUrl ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : t('audit.loadBtn')}
                 </button>
               </div>
             </div>
