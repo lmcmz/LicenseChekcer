@@ -12,7 +12,7 @@ Complete documentation for License Checker.
 
 - [API Reference](../API_EXAMPLES.md) - Complete API documentation with examples
 - [OpenAPI Spec](../public/openapi.json) - OpenAPI 3.1.0 specification
-- [Interactive Docs](https://licensechecker.xyz/api) - Scalar API documentation
+- [Interactive Docs](https://license-chekcer.vercel.app/api) - Scalar API documentation
 
 ## Features
 
@@ -39,4 +39,4 @@ See [main README](../README.md) for contribution guidelines.
 ## Support
 
 - [GitHub Issues](https://github.com/lmcmz/LicenseChekcer/issues)
-- [Live Demo](https://licensechecker.xyz)
+- [Live Demo](https://license-chekcer.vercel.app)
