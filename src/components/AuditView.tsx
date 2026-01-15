@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Loader2, 
-  AlertTriangle, 
-  LayoutGrid, 
-  Network, 
+import {
+  Loader2,
+  AlertTriangle,
+  LayoutGrid,
+  Network,
   RefreshCw,
   Search,
   ArrowRight,
@@ -21,7 +21,8 @@ import {
   Database,
   Cpu,
   Boxes,
-  Package
+  Package,
+  Upload
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DependencyAudit, RiskLevel } from '../types';
@@ -91,6 +92,7 @@ const AuditView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [showFormats, setShowFormats] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const allDone = tasks.length > 0 && tasks.every(t => t.status === 'success' || t.status === 'error');
 
@@ -149,6 +151,39 @@ const AuditView: React.FC = () => {
     }
     const repository = res.repository || (res.name.includes('/') ? `https://github.com/${res.name}` : `https://www.google.com/search?q=${res.name}+repo`);
     return { ...res, repository, riskLevel: finalRisk, isFriendly: finalFriendly, reason: finalReason };
+  };
+
+  const handleFileRead = async (file: File) => {
+    try {
+      const text = await file.text();
+      setContent(text);
+      setError(null);
+    } catch (err) {
+      setError(`Failed to read file: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      await handleFileRead(files[0]);
+    }
   };
 
   const runAudit = async () => {
@@ -269,7 +304,26 @@ const AuditView: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-[#0A0A0A] rounded-2xl border border-slate-200 dark:border-white/10 shadow-[0_0_50px_-12px_rgba(0,0,0,0.12)] dark:shadow-none overflow-hidden group focus-within:border-black dark:focus-within:border-white/30 transition-all">
+            <div
+              className={`bg-white dark:bg-[#0A0A0A] rounded-2xl border shadow-[0_0_50px_-12px_rgba(0,0,0,0.12)] dark:shadow-none overflow-hidden group focus-within:border-black dark:focus-within:border-white/30 transition-all relative ${
+                isDragging
+                  ? 'border-blue-500 dark:border-blue-400 border-2'
+                  : 'border-slate-200 dark:border-white/10'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              {isDragging && (
+                <div className="absolute inset-0 bg-blue-500/10 dark:bg-blue-400/10 z-10 flex items-center justify-center pointer-events-none">
+                  <div className="bg-white dark:bg-black px-6 py-4 rounded-xl border-2 border-blue-500 dark:border-blue-400 shadow-xl">
+                    <p className="text-sm font-bold text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                      <Upload className="w-5 h-5" />
+                      Drop file here to read
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="p-4 border-b border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest">
                   <Search className="w-3.5 h-3.5" /> {t('audit.inputLabel')}
