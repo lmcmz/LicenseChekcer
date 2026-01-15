@@ -16,6 +16,10 @@
     "dev": "vite dev",
     "build": "vite build && tsc --noEmit",
     "preview": "vite preview",
+    "test": "bun test",
+    "test:unit": "bun test tests/dependencyParser.test.ts",
+    "test:api": "bun test tests/api.test.ts",
+    "lint": "tsc --noEmit",
     "db:setup": "./scripts/setup-db.sh",
     "db:push": "supabase db push"
   },
