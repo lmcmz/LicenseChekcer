@@ -2,35 +2,35 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://licensechecker.xyz/</loc>
+    <loc>https://licensecheck.dev/</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://licensechecker.xyz/?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://licensechecker.xyz/?lang=zh"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://licensecheck.dev/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://licensecheck.dev/?lang=zh"/>
   </url>
   <url>
-    <loc>https://licensechecker.xyz/guide</loc>
+    <loc>https://licensecheck.dev/guide</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://licensechecker.xyz/guide?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://licensechecker.xyz/guide?lang=zh"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://licensecheck.dev/guide?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://licensecheck.dev/guide?lang=zh"/>
   </url>
   <url>
-    <loc>https://licensechecker.xyz/selector</loc>
+    <loc>https://licensecheck.dev/selector</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://licensechecker.xyz/selector?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://licensechecker.xyz/selector?lang=zh"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://licensecheck.dev/selector?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://licensecheck.dev/selector?lang=zh"/>
   </url>
   <url>
-    <loc>https://licensechecker.xyz/api</loc>
+    <loc>https://licensecheck.dev/api</loc>
     <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://licensechecker.xyz/api?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="zh" href="https://licensechecker.xyz/api?lang=zh"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://licensecheck.dev/api?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://licensecheck.dev/api?lang=zh"/>
   </url>
 </urlset>

@@ -1,6 +1,6 @@
 # License Checker API
 
-Base URL: `https://license-chekcer.vercel.app/api`
+Base URL: `https://licensecheck.dev/api`
 
 ## Main Endpoints
 
@@ -9,18 +9,18 @@ Base URL: `https://license-chekcer.vercel.app/api`
 **From URL (supports repo or file URL):**
 ```bash
 # GitHub repo URL (scans for dependency files)
-curl "https://license-chekcer.vercel.app/api/check?url=https://github.com/facebook/react"
+curl "https://licensecheck.dev/api/check?url=https://github.com/facebook/react"
 
 # Direct file URL
-curl "https://license-chekcer.vercel.app/api/check?url=https://raw.githubusercontent.com/facebook/react/main/package.json"
+curl "https://licensecheck.dev/api/check?url=https://raw.githubusercontent.com/facebook/react/main/package.json"
 
 # GitHub blob URL (auto-converts to raw URL)
-curl "https://license-chekcer.vercel.app/api/check?url=https://github.com/facebook/react/blob/main/package.json"
+curl "https://licensecheck.dev/api/check?url=https://github.com/facebook/react/blob/main/package.json"
 ```
 
 **From file content:**
 ```bash
-curl -X POST https://license-chekcer.vercel.app/api/check \
+curl -X POST https://licensecheck.dev/api/check \
   -H "Content-Type: application/json" \
   -d '{
     "content": "{\"dependencies\": {\"react\": \"^18.2.0\"}}"
@@ -32,7 +32,7 @@ curl -X POST https://license-chekcer.vercel.app/api/check \
 Audit parsed dependencies for license compliance.
 
 ```bash
-curl -X POST https://license-chekcer.vercel.app/api/audit \
+curl -X POST https://licensecheck.dev/api/audit \
   -H "Content-Type: application/json" \
   -d '{
     "dependencies": [
@@ -46,12 +46,12 @@ curl -X POST https://license-chekcer.vercel.app/api/audit \
 
 **From URL:**
 ```bash
-curl "https://license-chekcer.vercel.app/api/parse?url=https://raw.githubusercontent.com/facebook/react/main/package.json"
+curl "https://licensecheck.dev/api/parse?url=https://raw.githubusercontent.com/facebook/react/main/package.json"
 ```
 
 **From file content:**
 ```bash
-curl -X POST https://license-chekcer.vercel.app/api/parse \
+curl -X POST https://licensecheck.dev/api/parse \
   -H "Content-Type: application/json" \
   -d '{
     "content": "{\"dependencies\": {\"react\": \"^18.2.0\"}}"
@@ -96,6 +96,6 @@ Node.js • Python • Go • Rust • Java • Swift • Ruby • PHP
 
 ## Documentation
 
-Interactive docs: [license-chekcer.vercel.app/api](https://license-chekcer.vercel.app/api)
+Interactive docs: [licensecheck.dev/api](https://licensecheck.dev/api)
 
 Support: [github.com/lmcmz/LicenseChekcer/issues](https://github.com/lmcmz/LicenseChekcer/issues)

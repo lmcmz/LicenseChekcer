@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://licensechecker.xyz/sitemap.xml
+Sitemap: https://licensecheck.dev/sitemap.xml
 
 # Crawl-delay (optional, helps prevent overwhelming the server)
 Crawl-delay: 1

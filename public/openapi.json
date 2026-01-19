@@ -11,7 +11,7 @@
   },
   "servers": [
     {
-      "url": "https://license-chekcer.vercel.app/api",
+      "url": "https://licensecheck.dev/api",
       "description": "Production server"
     },
     {

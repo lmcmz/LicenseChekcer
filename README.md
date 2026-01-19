@@ -2,7 +2,7 @@
 
 A modern tool to check and audit open source licenses for your dependencies.
 
-🌐 **[Live Demo](https://license-chekcer.vercel.app)** • 📚 **[API Docs](https://license-chekcer.vercel.app/api)** • 🐛 **[Issues](https://github.com/lmcmz/LicenseChekcer/issues)**
+🌐 **[Live Demo](https://licensecheck.dev)** • 📚 **[API Docs](https://licensecheck.dev/api)** • 🐛 **[Issues](https://github.com/lmcmz/LicenseChekcer/issues)**
 
 ## Features
 
@@ -32,15 +32,15 @@ Visit `http://localhost:3000`
 
 ```bash
 # Check from GitHub repo URL
-curl "https://license-chekcer.vercel.app/api/check?url=https://github.com/facebook/react"
+curl "https://licensecheck.dev/api/check?url=https://github.com/facebook/react"
 
 # Check from file content
-curl -X POST https://license-chekcer.vercel.app/api/check \
+curl -X POST https://licensecheck.dev/api/check \
   -H "Content-Type: application/json" \
   -d '{"content": "..."}'
 
 # Audit parsed dependencies
-curl -X POST https://license-chekcer.vercel.app/api/audit \
+curl -X POST https://licensecheck.dev/api/audit \
   -H "Content-Type: application/json" \
   -d '{"dependencies": [{"name": "react", "version": "18.2.0"}]}'
 ```

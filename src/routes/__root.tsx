@@ -82,7 +82,7 @@ export const Route = createRootRoute({
         },
         {
           property: 'og:url',
-          content: 'https://license-chekcer.vercel.app',
+          content: 'https://licensecheck.dev',
         },
         // Twitter Card tags
         {
@@ -115,7 +115,7 @@ export const Route = createRootRoute({
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'apple-touch-icon', href: '/logo.svg' },
         { rel: 'manifest', href: '/manifest.json' },
-        { rel: 'canonical', href: 'https://license-chekcer.vercel.app' },
+        { rel: 'canonical', href: 'https://licensecheck.dev' },
         { rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css' },
       ],
       scripts: [
@@ -128,7 +128,7 @@ export const Route = createRootRoute({
             applicationCategory: 'DeveloperApplication',
             operatingSystem: 'Web',
             description: 'Free open source license compliance tool. Scan dependencies, verify licenses, and flag risks automatically.',
-            url: 'https://license-chekcer.vercel.app',
+            url: 'https://licensecheck.dev',
             author: {
               '@type': 'Organization',
               name: 'Outblock',

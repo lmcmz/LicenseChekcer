@@ -7,7 +7,7 @@ export default defineEventHandler((event) => {
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
-    'https://license-chekcer.vercel.app',
+    'https://licensecheck.dev',
   ];
 
   if (origin && allowedOrigins.includes(origin)) {

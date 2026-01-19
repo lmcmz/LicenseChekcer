@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/lmcmz/LicenseChekcer/issues"
   },
-  "homepage": "https://github.com/lmcmz/LicenseChekcer#readme",
+  "homepage": "https://licensecheck.dev",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && tsc --noEmit",
