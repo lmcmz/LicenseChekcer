@@ -22,6 +22,23 @@ function getSupabaseClient() {
   return supabase;
 }
 
+// In-memory cache for repository scans (TTL: 5 minutes)
+const repoScanCache = new Map<string, { content: string; timestamp: number }>();
+const REPO_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCachedRepoScan(url: string): string | null {
+  const cached = repoScanCache.get(url);
+  if (cached && Date.now() - cached.timestamp < REPO_CACHE_TTL) {
+    return cached.content;
+  }
+  repoScanCache.delete(url);
+  return null;
+}
+
+function setCachedRepoScan(url: string, content: string): void {
+  repoScanCache.set(url, { content, timestamp: Date.now() });
+}
+
 interface DependencyInput {
   name: string;
   version: string;
@@ -62,18 +79,27 @@ export default defineEventHandler(async (event) => {
 
       // If it's a GitHub repo URL (not a file), scan the repo
       if (isGithubUrl && !isRawUrl && !isFileUrl) {
-        // Scan repository directly
-        const scanData = await scanRepository(url);
+        // Check cache first
+        const cachedContent = getCachedRepoScan(url);
+        if (cachedContent) {
+          content = cachedContent;
+        } else {
+          // Scan repository directly
+          const scanData = await scanRepository(url);
 
-        if (!scanData.success || !scanData.files || scanData.files.length === 0) {
-          return {
-            success: false,
-            error: scanData.error || 'No dependency files found in repository',
-          };
+          if (!scanData.success || !scanData.files || scanData.files.length === 0) {
+            return {
+              success: false,
+              error: scanData.error || 'No dependency files found in repository',
+            };
+          }
+
+          // Use the first file found
+          content = scanData.files[0].content;
+
+          // Cache the result
+          setCachedRepoScan(url, content);
         }
-
-        // Use the first file found
-        content = scanData.files[0].content;
       } else {
         // It's a file URL - fetch directly
         let targetUrl = url;
@@ -125,37 +151,54 @@ export default defineEventHandler(async (event) => {
       return { success: true, data: [] };
     }
 
-    // Check cache first
+    // Check cache first - use batch query instead of N+1
     const cachedResults: DependencyAudit[] = [];
     const uncachedDeps: DependencyInput[] = [];
 
-    for (const dep of dependencies) {
-      const ecosystem = dep.ecosystem || 'unknown';
-      const { data, error } = await getSupabaseClient()
-        .from('package_licenses')
-        .select('*')
-        .eq('ecosystem', ecosystem)
-        .eq('package_name', dep.name)
-        .eq('package_version', dep.version)
-        .single();
+    // Get unique package names for batch query
+    const packageNames = [...new Set(dependencies.map(dep => dep.name))];
 
-      if (data && !error) {
-        // Found in cache
-        const record = data as any;
-        cachedResults.push({
-          name: record.package_name,
-          version: record.package_version,
-          license: record.license_name,
-          repository: record.metadata?.repository,
-          riskLevel: record.risk_level as 'Safe' | 'Caution' | 'High Risk',
-          reason: record.metadata?.reason,
-          isFriendly: record.risk_level === 'Safe',
-          sources: record.metadata?.sources || [],
-        });
-      } else {
-        // Not in cache
-        uncachedDeps.push(dep);
+    // Batch query all dependencies at once using .in()
+    const { data: cachedData, error: cacheError } = await getSupabaseClient()
+      .from('package_licenses')
+      .select('*')
+      .in('package_name', packageNames);
+
+    if (!cacheError && cachedData) {
+      // Create a map for quick lookup
+      const cacheMap = new Map(
+        cachedData.map((record: any) => [
+          `${record.ecosystem}:${record.package_name}@${record.package_version}`,
+          record
+        ])
+      );
+
+      // Check each dependency against cache
+      for (const dep of dependencies) {
+        const ecosystem = dep.ecosystem || 'unknown';
+        const key = `${ecosystem}:${dep.name}@${dep.version}`;
+        const record = cacheMap.get(key);
+
+        if (record) {
+          // Found in cache
+          cachedResults.push({
+            name: record.package_name,
+            version: record.package_version,
+            license: record.license_name,
+            repository: record.metadata?.repository,
+            riskLevel: record.risk_level as 'Safe' | 'Caution' | 'High Risk',
+            reason: record.metadata?.reason,
+            isFriendly: record.risk_level === 'Safe',
+            sources: record.metadata?.sources || [],
+          });
+        } else {
+          // Not in cache
+          uncachedDeps.push(dep);
+        }
       }
+    } else {
+      // If batch query fails, fall back to treating all as uncached
+      uncachedDeps.push(...dependencies);
     }
 
     // If all results are cached, return them
@@ -242,14 +285,19 @@ export default defineEventHandler(async (event) => {
       sources: [...(audit.sources || []), ...groundingUrls]
     }));
 
-    // Store results in database
+    // Store results in database - use ORIGINAL versions from package.json, not AI versions
     const insertPromises = audits.map((audit) => {
-      const key = `${audit.name}@${audit.version}`;
+      // Find the original dependency that matches this audit
+      const originalDep = uncachedDeps.find(dep => dep.name === audit.name);
+      if (!originalDep) return Promise.resolve(); // Skip if not found
+
+      const key = `${originalDep.name}@${originalDep.version}`;
       const ecosystem = ecosystemMap.get(key) || 'unknown';
+
       return getSupabaseClient().from('package_licenses').insert({
         ecosystem,
         package_name: audit.name,
-        package_version: audit.version,
+        package_version: originalDep.version, // Use original version, not AI's version
         license_name: audit.license,
         risk_level: audit.riskLevel,
         metadata: {
@@ -257,6 +305,7 @@ export default defineEventHandler(async (event) => {
           reason: audit.reason,
           sources: audit.sources,
           isFriendly: audit.isFriendly,
+          aiResolvedVersion: audit.version, // Store AI's resolved version for reference
         }
       } as any);
     });
